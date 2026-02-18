@@ -1,26 +1,19 @@
 #include "grid.h"
 #include "raylib.h"
 #include <limits.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
-
-#define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 500
-
-#define CELL_SIZE 40
-#define CELL_PADDING 10
-#define BOMBNUM 10
 
 Cell matrix[GRID_W][GRID_H];
 bool running = true;
 
-bool is_oob(int x, int y) { return x < 0 || x > GRID_W - 1 || y < 0 || y > GRID_H - 1; }
 int inputx;
 int inputy;
 
 void autoexplode() {
-    if (matrix[inputx][inputy].number == 0) {
-        matrix[inputx][inputy].fresh = 1;
+    if (matrix[GetMouseGridValues().x][GetMouseGridValues().y].number == 0) {
+        matrix[GetMouseGridValues().x][GetMouseGridValues().y].fresh = 1;
         for (int x = 0; x < GRID_H; x++) {
             for (int y = 0; y < GRID_H; y++) { // For every cell in the
                 if (matrix[x][y].fresh) {      // If it's fresh air
@@ -85,44 +78,38 @@ int main() {
         Color squarecolour = RED;
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        Vector2 mouse = GetMousePosition();
 
-        // TODO: x and y here refer to the screen coords, not to the grid
-        for (int x = CELL_PADDING; x < SCREEN_WIDTH; x += CELL_SIZE + CELL_PADDING) {
-            for (int y = CELL_PADDING; y < SCREEN_HEIGHT; y += CELL_SIZE + CELL_PADDING) {
-                Vector2 squarelocation = {(float)x, (float)y};
+        for (int x = 0; x < GRID_W; x++) {
+            for (int y = 0; y < GRID_H; y++) {
                 if (matrix[x][y].uncovered) {
                     squarecolour = BLUE;
-                    if (mouse.x > squarelocation.x && mouse.y > squarelocation.y && mouse.x < squarelocation.x + CELL_SIZE &&
-                        mouse.y < squarelocation.y + CELL_SIZE) {
+                    if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
                         squarecolour = DARKBLUE;
-                    }
                 } else if (matrix[x][y].flag) {
                     squarecolour = YELLOW;
-                    if (mouse.x > squarelocation.x && mouse.y > squarelocation.y && mouse.x < squarelocation.x + CELL_SIZE &&
-                        mouse.y < squarelocation.y + CELL_SIZE) {
+                    if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
                         squarecolour = ORANGE;
-                        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
-                            matrix[x][y].flag = false;
-                    }
-                } else if (mouse.x > squarelocation.x && mouse.y > squarelocation.y && mouse.x < squarelocation.x + CELL_SIZE &&
-                           mouse.y < squarelocation.y + CELL_SIZE) {
+                } else if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
                     squarecolour = MAROON;
-                    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                        matrix[x][y].uncovered = true;
-                        inputx = x;
-                        inputy = y;
-                        // autoexplode(); TODO fix this bs
-                    } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                        matrix[x][y].flag = true;
-                    }
-                } else
+                else
                     squarecolour = RED;
-                DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, squarecolour);
+                DrawRectangle(x * (CELL_SIZE + CELL_PADDING), y * (CELL_SIZE + CELL_PADDING), CELL_SIZE, CELL_SIZE, squarecolour);
+                if (matrix[x][y].uncovered) {
+                    const char *number = 0;
+                    number = TextFormat("%i", matrix[x][y].number);
+                    DrawText(number, x * (CELL_SIZE + CELL_PADDING) + 12, y * (CELL_PADDING + CELL_SIZE) + 7, 30, WHITE);
+                }
             }
         }
 
         EndDrawing();
+
+        if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag && GetMouseGridValues().left) {
+            matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered = true;
+            autoexplode();
+        }
+        if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered && GetMouseGridValues().right)
+            matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag = true;
     }
 
     CloseWindow();

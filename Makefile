@@ -2,8 +2,8 @@
 all: build/main
 
 # Build target
-build/main: main.c | build
-	gcc main.c -o build/main -lraylib
+build/main: main.c grid.c | build
+	gcc main.c grid.c -o build/main -lraylib
 
 # Create build directory if missing
 build:
@@ -12,4 +12,5 @@ build:
 # Clean
 clean:
 	rm -rf build/main
+
 

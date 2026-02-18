@@ -1,7 +1,12 @@
 #include <stdbool.h>
 
-#define GRID_H 10
-#define GRID_W 10
+#define CELL_SIZE 40
+#define CELL_PADDING 10
+#define BOMBNUM 10
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 500
+#define GRID_H (SCREEN_WIDTH / (CELL_SIZE + CELL_PADDING))
+#define GRID_W (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
 
 typedef struct Cell Cell;
 
@@ -15,12 +20,11 @@ struct Cell {
 
 extern Cell matrix[GRID_W][GRID_H];
 
-// Tries to uncover a flag, if out of bounds should print an error to the console and safely exit from app
-// It should automatically try and uncover adjacent cells if the number of the uncovered cells equals 0
-void grid_uncover(int x, int y);
-
-// Tries to set a cell of the grid as flagged, if out of bounds should print an error to the console and safely exit from app
-void grid_flag(int x, int y);
-
-// Returns the struct for the Cell at a given coord, if out of bounds should print an error to the console and safely exit from app
-Cell grid_get_cell(int x, int y);
+bool is_oob(int x, int y);
+struct GetValues {
+    int x;
+    int y;
+    bool left;
+    bool right;
+};
+struct GetValues GetMouseGridValues();
