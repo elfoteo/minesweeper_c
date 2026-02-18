@@ -97,8 +97,6 @@ int main() {
 
     Color squarecolour = RED;
 
-    autoexplode();
-
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
@@ -134,6 +132,7 @@ int main() {
             matrix[x][y].uncovered = true;
             inputx = x;
             inputy = y;
+            // autoexplode(); TODO fix this bs
           } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
             matrix[x][y].flag = true;
           }
