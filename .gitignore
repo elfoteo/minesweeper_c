@@ -1,3 +1,11 @@
 # Ignore build artifacts
 /build/
 
+# Raylib build artifacts
+external/raylib/src/*.o
+external/raylib/src/libraylib.a
+external/raylib/src/libraylib.so*
+external/raylib/src/libraylib.web.a
+external/raylib/src/*.dll
+external/raylib/src/*.exe
+external/raylib/src/*.log
