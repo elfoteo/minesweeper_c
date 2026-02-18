@@ -74,42 +74,63 @@ int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib [core] example - basic window");
     SetTargetFPS(60);
 
+    bool running = true;
     while (!WindowShouldClose()) {
-        Color squarecolour = RED;
-        BeginDrawing();
-        ClearBackground(RAYWHITE);
+        while (running && !WindowShouldClose()) {
+            Color squarecolour = RED;
+            BeginDrawing();
+            ClearBackground(RAYWHITE);
 
-        for (int x = 0; x < GRID_W; x++) {
-            for (int y = 0; y < GRID_H; y++) {
-                if (matrix[x][y].uncovered) {
-                    squarecolour = BLUE;
-                    if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                        squarecolour = DARKBLUE;
-                } else if (matrix[x][y].flag) {
-                    squarecolour = YELLOW;
-                    if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                        squarecolour = ORANGE;
-                } else if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                    squarecolour = MAROON;
-                else
-                    squarecolour = RED;
-                DrawRectangle(x * (CELL_SIZE + CELL_PADDING), y * (CELL_SIZE + CELL_PADDING), CELL_SIZE, CELL_SIZE, squarecolour);
-                if (matrix[x][y].uncovered) {
-                    const char *number = 0;
-                    number = TextFormat("%i", matrix[x][y].number);
-                    DrawText(number, x * (CELL_SIZE + CELL_PADDING) + 12, y * (CELL_PADDING + CELL_SIZE) + 7, 30, WHITE);
+            for (int x = 0; x < GRID_W; x++) {
+                for (int y = 0; y < GRID_H; y++) {
+                    if (matrix[x][y].uncovered) {
+                        squarecolour = BLUE;
+                        if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
+                            squarecolour = DARKBLUE;
+                        if (matrix[x][y].mine) {
+                            squarecolour = BLACK;
+                            running = false;
+                        }
+                    } else if (matrix[x][y].flag) {
+                        squarecolour = YELLOW;
+                        if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
+                            squarecolour = ORANGE;
+                    } else if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
+                        squarecolour = MAROON;
+                    else
+                        squarecolour = RED;
+                    DrawRectangle(x * (CELL_SIZE + CELL_PADDING) + 4, y * (CELL_SIZE + CELL_PADDING) + 4, CELL_SIZE, CELL_SIZE, GRAY);
+                    DrawRectangle(x * (CELL_SIZE + CELL_PADDING), y * (CELL_SIZE + CELL_PADDING), CELL_SIZE, CELL_SIZE, squarecolour);
+                    if (matrix[x][y].uncovered) {
+                        const char *number = 0;
+                        number = TextFormat("%i", matrix[x][y].number);
+                        DrawText(number, x * (CELL_SIZE + CELL_PADDING) + 12, y * (CELL_PADDING + CELL_SIZE) + 7, 30, WHITE);
+                    }
                 }
             }
+
+            EndDrawing();
+
+            if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag && GetMouseGridValues().left) {
+                matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered = true;
+                autoexplode();
+            }
+            if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered && GetMouseGridValues().right)
+                matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag = true;
+
+            if (WindowShouldClose())
+                CloseWindow();
         }
+
+        int fontsize = SCREEN_WIDTH / 21;
+
+        BeginDrawing();
+        ClearBackground(RAYWHITE); // TODO change this for something better
+
+        DrawText("YOU LOST", 0, 0, 4 * fontsize, BLACK);
+        DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, BLACK);
 
         EndDrawing();
-
-        if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag && GetMouseGridValues().left) {
-            matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered = true;
-            autoexplode();
-        }
-        if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered && GetMouseGridValues().right)
-            matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag = true;
     }
 
     CloseWindow();
