@@ -6,7 +6,6 @@
 #include <time.h>
 
 Cell matrix[GRID_W][GRID_H];
-bool running = true;
 
 int inputx;
 int inputy;
@@ -74,12 +73,13 @@ int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib [core] example - basic window");
     SetTargetFPS(60);
 
-    bool running = true;
+    int mode = 1;
     while (!WindowShouldClose()) {
-        while (running && !WindowShouldClose()) {
+        switch (mode) {
+        case 1:
             Color squarecolour = RED;
             BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground(BLACK);
 
             for (int x = 0; x < GRID_W; x++) {
                 for (int y = 0; y < GRID_H; y++) {
@@ -89,7 +89,7 @@ int main() {
                             squarecolour = DARKBLUE;
                         if (matrix[x][y].mine) {
                             squarecolour = BLACK;
-                            running = false;
+                            mode = 2;
                         }
                     } else if (matrix[x][y].flag) {
                         squarecolour = YELLOW;
@@ -117,20 +117,39 @@ int main() {
             }
             if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered && GetMouseGridValues().right)
                 matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag = true;
+            if (mode != 2) {
+                mode = 3;
+                for (int x = 0; x < GRID_W; x++) {
+                    for (int y = 0; y < GRID_H; y++) {
+                        if (!matrix[x][y].uncovered && !matrix[x][y].mine)
+                            mode = 1;
+                    }
+                }
+            }
+            break;
+        case 2:
 
-            if (WindowShouldClose())
-                CloseWindow();
+            int fontsize = SCREEN_WIDTH / 21;
+
+            BeginDrawing();
+            ClearBackground(BLACK); // TODO change this for something better
+
+            DrawText("YOU LOST", 0, 0, 4 * fontsize, GRAY);
+            DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, GRAY);
+
+            EndDrawing();
+            break;
+        case 3:
+            int fontsizewin = SCREEN_WIDTH / 20;
+
+            BeginDrawing();
+            ClearBackground(YELLOW); // TODO change this for something better
+
+            DrawText("YOU WON", 0, 0, 4 * fontsizewin, WHITE);
+            DrawText("As a reward, you can close this window.", 0, 4 * fontsizewin, fontsizewin, WHITE);
+
+            EndDrawing();
         }
-
-        int fontsize = SCREEN_WIDTH / 21;
-
-        BeginDrawing();
-        ClearBackground(RAYWHITE); // TODO change this for something better
-
-        DrawText("YOU LOST", 0, 0, 4 * fontsize, BLACK);
-        DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, BLACK);
-
-        EndDrawing();
     }
 
     CloseWindow();
