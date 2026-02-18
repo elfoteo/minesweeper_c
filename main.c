@@ -97,6 +97,8 @@ int main() {
 
     Color squarecolour = RED;
 
+    const char *number = 0;
+
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
@@ -112,7 +114,7 @@ int main() {
               compare.y < squarelocation.y + 40) {
             squarecolour = DARKBLUE;
           }
-
+          number = TextFormat("%i", matrix[x][y].number);
         } else if (matrix[x][y].flag) {
           squarecolour = YELLOW;
           if (compare.x > squarelocation.x && compare.y > squarelocation.y &&
@@ -139,6 +141,10 @@ int main() {
         } else
           squarecolour = RED;
         DrawRectangle(x, y, 40, 40, squarecolour);
+        if (matrix[x][y].mine)
+          DrawText("X", x + 12, y + 7, 30, WHITE);
+        else if (matrix[x][y].uncovered)
+          DrawText(number, x + 12, y + 7, 30, WHITE);
       }
     }
 
