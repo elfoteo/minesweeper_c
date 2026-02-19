@@ -1,7 +1,31 @@
 #include "button.h"
 #include <raylib.h>
+#include <stdio.h>
 
-const char *whichButton = 0;
+long whichButton = 0;
+
+static inline long calculate_button_id(const char *text, int x, int y, int w, int h) {
+    long hash = 1469598103934665603ULL; // FNV offset basis
+    const long prime = 1099511628211ULL;
+
+    // Hash text
+    while (*text) {
+        hash ^= (unsigned char)(*text++);
+        hash *= prime;
+    }
+
+    // Hash ints
+    hash ^= (long)x;
+    hash *= prime;
+    hash ^= (long)y;
+    hash *= prime;
+    hash ^= (long)w;
+    hash *= prime;
+    hash ^= (long)h;
+    hash *= prime;
+
+    return (long)hash;
+}
 
 ButtonStyle button_default_style() {
     return (ButtonStyle){
@@ -9,9 +33,9 @@ ButtonStyle button_default_style() {
         .fg = (Color){255, 255, 255, 255},
         .fgHover = (Color){200, 200, 200, 255},
         .fgActive = (Color){180, 180, 180, 255},
-        .bg = (Color){20, 20, 20, 255},
-        .bgHover = (Color){35, 35, 35, 255},
-        .bgActive = (Color){60, 60, 60, 255},
+        .bg = (Color){30, 30, 30, 255},
+        .bgHover = (Color){60, 60, 60, 255},
+        .bgActive = (Color){80, 80, 80, 255},
     };
 }
 
@@ -22,25 +46,29 @@ bool button_draw(const char *text, int x, int y, int w, int h, const ButtonStyle
     // Check if the mouse is within the bounding box of the button
     if (GetMouseX() > x && GetMouseX() < x + w && GetMouseY() > y && GetMouseY() < y + h) {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            whichButton = text;
+            whichButton = calculate_button_id(text, x, y, w, h);
         }
         // Left mouse not button pressed
         if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            // Has the mouse button just been released on this button
-            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && whichButton == text) {
-                clicked = true;
-            }
             bg = s.bgHover;
             fg = s.fgHover;
         }
+        // Has the mouse button just been released on this button
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && whichButton == calculate_button_id(text, x, y, w, h)) {
+            clicked = true;
+            whichButton = 0;
+        }
+    } else {
+        // If we left the button while it was active and the mouse button was released no button is currently selected so reset
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && whichButton == calculate_button_id(text, x, y, w, h)) {
+            whichButton = 0;
+        }
     }
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        if (whichButton == text) {
+        if (whichButton == calculate_button_id(text, x, y, w, h)) {
             bg = s.bgActive;
             fg = s.fgActive;
         }
-    } else {
-        whichButton = 0;
     }
 
     DrawRectangle(x, y, w, h, bg);

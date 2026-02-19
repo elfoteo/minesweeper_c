@@ -1,12 +1,13 @@
+#include "main.h"
+#include "button.h"
 #include "grid.h"
+#include "main_menu.h"
 #include "raylib.h"
 #include <limits.h>
 #include <stdbool.h>
 
 #define XRAY false
-typedef enum GameState GameState;
-enum GameState { STATE_MENU, STATE_PLAYING, STATE_WIN, STATE_LOSE };
-GameState game_state = STATE_PLAYING;
+GameState game_state = STATE_MENU;
 
 void draw_game() {
     Color squarecolour = RED;
@@ -91,17 +92,13 @@ void draw_win_screen() {
     DrawText("As a reward, you can close this window.", 0, 4 * fontsizewin, fontsizewin, YELLOW);
 }
 
-void draw_main_menu() {
-    ClearBackground(PURPLE); // TODO
-}
-
 int main() {
     grid_init();
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && game_state != STATE_EXIT_NOW) {
         BeginDrawing();
         switch (game_state) {
             case STATE_PLAYING: {
@@ -119,7 +116,14 @@ int main() {
             }
 
             case STATE_MENU: {
-                draw_main_menu();
+                main_menu_draw();
+                break;
+            }
+            case STATE_ABOUT: {
+                ClearBackground(RED); // TODO
+                break;
+            }
+            case STATE_EXIT_NOW: {
                 break;
             }
         }

@@ -1,10 +1,9 @@
+#include "main.h"
 #include <stdbool.h>
 
 #define CELL_SIZE 40
 #define CELL_PADDING 10
 #define BOMBNUM 10
-#define SCREEN_WIDTH 500
-#define SCREEN_HEIGHT 500
 #define GRID_H (SCREEN_WIDTH / (CELL_SIZE + CELL_PADDING))
 #define GRID_W (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
 
