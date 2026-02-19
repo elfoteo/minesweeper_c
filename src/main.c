@@ -1,5 +1,6 @@
 #include "main.h"
 #include "about_menu.h"
+#include "button.h"
 #include "grid.h"
 #include "main_menu.h"
 #include "raylib.h"
@@ -81,6 +82,10 @@ void draw_loose_screen() {
 
     DrawText("YOU LOST", 0, 0, 4 * fontsize, GRAY);
     DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, GRAY);
+
+    if (button_draw_centered("Back", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 140, 200, 60, BUTTON_DEFAULT_STYLE)) {
+        game_state = STATE_MAIN_MENU;
+    }
 }
 
 void draw_win_screen() {
@@ -90,11 +95,13 @@ void draw_win_screen() {
 
     DrawText("YOU WON", 0, 0, 4 * fontsizewin, YELLOW);
     DrawText("As a reward, you can close this window.", 0, 4 * fontsizewin, fontsizewin, YELLOW);
+
+    if (button_draw_centered("Back", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 140, 200, 60, BUTTON_DEFAULT_STYLE)) {
+        game_state = STATE_MAIN_MENU;
+    }
 }
 
 int main() {
-    grid_init();
-
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
 
