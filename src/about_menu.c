@@ -3,23 +3,28 @@
 #include <raylib.h>
 
 #define NAME_COUNT 2
-static const char *rainbowFragmentShader = "#version 330 core\n"
-                                           "in vec2 fragTexCoord;\n"
-                                           "in vec4 fragColor;\n"
-                                           "out vec4 finalColor;\n"
+static const char *rainbowFragmentShader = "#ifdef GL_ES\n"
+                                           "precision mediump float;\n"
+                                           "#endif\n"
+
+                                           "varying vec2 fragTexCoord;\n"
+                                           "varying vec4 fragColor;\n"
+
                                            "uniform sampler2D texture0;\n"
                                            "uniform float time;\n"
+
                                            "void main()\n"
                                            "{\n"
-                                           "    vec4 texColor = texture(texture0, fragTexCoord);\n"
+                                           "    vec4 texColor = texture2D(texture0, fragTexCoord);\n"
                                            "    float wave = (gl_FragCoord.x - gl_FragCoord.y) * 0.02;\n"
                                            "    float t = time;\n"
                                            "    float r = 0.5 + 0.5 * sin(wave - t);\n"
                                            "    float g = 0.5 + 0.5 * sin(wave - t + 2.094);\n"
                                            "    float b = 0.5 + 0.5 * sin(wave - t + 4.188);\n"
                                            "    vec3 rainbow = vec3(r, g, b);\n"
-                                           "    finalColor = vec4(rainbow, texColor.a);\n"
+                                           "    gl_FragColor = vec4(rainbow, texColor.a);\n"
                                            "}\n";
+
 const char *title = "About";
 const int title_fontsize = 48;
 const char *desc1 = "Minesweeper written in C using raylib.\n";
