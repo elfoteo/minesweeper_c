@@ -1,5 +1,5 @@
 # Sources
-SRC = main.c grid.c button.c utils.c main_menu.c about_menu.c
+SRC = $(wildcard src/*.c)
 
 # Output names
 LINUX_OUT = build/main
