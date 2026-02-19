@@ -21,18 +21,20 @@ bool button_draw(const char *text, int x, int y, int w, int h, const ButtonStyle
     Color bg = s.bg;
     // Check if the mouse is within the bounding box of the button
     if (GetMouseX() > x && GetMouseX() < x + w && GetMouseY() > y && GetMouseY() < y + h) {
-        if (IsMouseButtonPressed(0)) {
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             whichButton = text;
         }
-        if (!IsMouseButtonDown(0)) {                               // Left mouse not button pressed
-            if (IsMouseButtonReleased(0) && whichButton == text) { // Has the mouse button just been released on this button
+        // Left mouse not button pressed
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            // Has the mouse button just been released on this button
+            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && whichButton == text) {
                 clicked = true;
             }
             bg = s.bgHover;
             fg = s.fgHover;
         }
     }
-    if (IsMouseButtonDown(0)) {
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
         if (whichButton == text) {
             bg = s.bgActive;
             fg = s.fgActive;
