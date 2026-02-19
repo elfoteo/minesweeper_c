@@ -1,5 +1,5 @@
 # Sources
-SRC = main.c grid.c button.c
+SRC = main.c grid.c button.c utils.c
 
 # Output names
 LINUX_OUT = build/main

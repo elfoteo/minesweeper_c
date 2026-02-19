@@ -5,38 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-Cell matrix[GRID_W][GRID_H];
-
-int inputx;
-int inputy;
-
-void autoexplode() {
-    if (matrix[GetMouseGridValues().x][GetMouseGridValues().y].number == 0) {
-        matrix[GetMouseGridValues().x][GetMouseGridValues().y].fresh = 1;
-        for (int x = 0; x < GRID_H; x++) {
-            for (int y = 0; y < GRID_H; y++) { // For every cell in the
-                if (matrix[x][y].fresh) {      // If it's fresh air
-                    matrix[x][y].fresh = 0;
-                    for (int x0 = -1; x0 < 2; x0++) {
-                        for (int y0 = -1; y0 < 2; y0++) {              // Check in a 3x3 area its neighbours
-                            if (!is_oob(x + x0, y + y0)) {             // Skip if oob
-                                if (!matrix[x + x0][y + y0].uncovered) // for (int
-                                {                                      // If its earth set it to air
-                                    matrix[x + x0][y + y0].uncovered = 1;
-                                    if (matrix[x + x0][y + y0].number == 0) {
-                                        matrix[x + x0][y + y0].fresh = 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    x = 0;
-                    y = 0;
-                }
-            }
-        }
-    }
-}
+#define XRAY false
 
 int main() {
     srand(time(NULL));
@@ -70,85 +39,105 @@ int main() {
         }
     }
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "raylib [core] example - basic window");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
 
     int mode = 1;
     while (!WindowShouldClose()) {
         switch (mode) {
-        case 1:
-            Color squarecolour = RED;
-            BeginDrawing();
-            ClearBackground(BLACK);
+            case 1: {
 
-            for (int x = 0; x < GRID_W; x++) {
-                for (int y = 0; y < GRID_H; y++) {
-                    if (matrix[x][y].uncovered) {
-                        squarecolour = BLUE;
-                        if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                            squarecolour = DARKBLUE;
-                        if (matrix[x][y].mine) {
-                            squarecolour = BLACK;
-                            mode = 2;
-                        }
-                    } else if (matrix[x][y].flag) {
-                        squarecolour = YELLOW;
-                        if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                            squarecolour = ORANGE;
-                    } else if (GetMouseGridValues().x == x && GetMouseGridValues().y == y)
-                        squarecolour = MAROON;
-                    else
-                        squarecolour = RED;
-                    DrawRectangle(x * (CELL_SIZE + CELL_PADDING) + 4, y * (CELL_SIZE + CELL_PADDING) + 4, CELL_SIZE, CELL_SIZE, GRAY);
-                    DrawRectangle(x * (CELL_SIZE + CELL_PADDING), y * (CELL_SIZE + CELL_PADDING), CELL_SIZE, CELL_SIZE, squarecolour);
-                    if (matrix[x][y].uncovered) {
-                        const char *number = 0;
-                        number = TextFormat("%i", matrix[x][y].number);
-                        DrawText(number, x * (CELL_SIZE + CELL_PADDING) + 12, y * (CELL_PADDING + CELL_SIZE) + 7, 30, WHITE);
-                    }
-                }
-            }
+                Color squarecolour = RED;
+                BeginDrawing();
+                ClearBackground(BLACK);
 
-            EndDrawing();
+                CellPos mouse_pos = mouse_to_grid();
+                Cell hovered_cell = matrix[mouse_pos.x][mouse_pos.y];
 
-            if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag && GetMouseGridValues().left) {
-                matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered = true;
-                autoexplode();
-            }
-            if (!matrix[GetMouseGridValues().x][GetMouseGridValues().y].uncovered && GetMouseGridValues().right)
-                matrix[GetMouseGridValues().x][GetMouseGridValues().y].flag = true;
-            if (mode != 2) {
-                mode = 3;
                 for (int x = 0; x < GRID_W; x++) {
                     for (int y = 0; y < GRID_H; y++) {
-                        if (!matrix[x][y].uncovered && !matrix[x][y].mine)
-                            mode = 1;
+                        Cell current = matrix[x][y];
+                        if (current.uncovered) {
+                            squarecolour = BLUE;
+                            if (mouse_pos.x == x && mouse_pos.y == y)
+                                squarecolour = DARKBLUE;
+                            if (current.mine) {
+                                squarecolour = BLACK;
+                                mode = 2;
+                            }
+                        } else if (current.flag) {
+                            squarecolour = YELLOW;
+                            if (mouse_pos.x == x && mouse_pos.y == y)
+                                squarecolour = ORANGE;
+                        } else if (mouse_pos.x == x && mouse_pos.y == y)
+                            squarecolour = MAROON;
+                        else
+                            squarecolour = RED;
+#if XRAY
+                        if (!current.uncovered) {
+                            squarecolour = DARKPURPLE;
+                        }
+#endif
+                        // Gray dropshadow
+                        DrawRectangle(x * (CELL_SIZE + CELL_PADDING) + 4, y * (CELL_SIZE + CELL_PADDING) + 4, CELL_SIZE, CELL_SIZE, GRAY);
+                        // Draw the tile
+                        DrawRectangle(x * (CELL_SIZE + CELL_PADDING), y * (CELL_SIZE + CELL_PADDING), CELL_SIZE, CELL_SIZE, squarecolour);
+                        if (current.uncovered || XRAY) {
+                            const char *number = 0;
+                            number = TextFormat("%i", matrix[x][y].number);
+#if XRAY
+                            if (current.mine) {
+                                number = "*";
+                            }
+#endif
+                            DrawText(number, x * (CELL_SIZE + CELL_PADDING) + 12, y * (CELL_PADDING + CELL_SIZE) + 7, 30, WHITE);
+                        }
                     }
                 }
+
+                EndDrawing();
+
+                if (!hovered_cell.flag && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    grid_uncover(mouse_pos.x, mouse_pos.y);
+                }
+                if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+                    grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+                }
+                if (mode != 2) {
+                    mode = 3;
+                    for (int x = 0; x < GRID_W; x++) {
+                        for (int y = 0; y < GRID_H; y++) {
+                            if (!matrix[x][y].uncovered && !matrix[x][y].mine)
+                                mode = 1;
+                        }
+                    }
+                }
+                break;
             }
-            break;
-        case 2:
+            case 2: {
+                int fontsize = SCREEN_WIDTH / 21;
 
-            int fontsize = SCREEN_WIDTH / 21;
+                BeginDrawing();
+                ClearBackground(BLACK); // TODO change this for something better
 
-            BeginDrawing();
-            ClearBackground(BLACK); // TODO change this for something better
+                DrawText("YOU LOST", 0, 0, 4 * fontsize, GRAY);
+                DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, GRAY);
 
-            DrawText("YOU LOST", 0, 0, 4 * fontsize, GRAY);
-            DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, GRAY);
+                EndDrawing();
+                break;
+            }
 
-            EndDrawing();
-            break;
-        case 3:
-            int fontsizewin = SCREEN_WIDTH / 20;
+            case 3: {
+                int fontsizewin = SCREEN_WIDTH / 20;
 
-            BeginDrawing();
-            ClearBackground(YELLOW); // TODO change this for something better
+                BeginDrawing();
+                ClearBackground(BLACK); // TODO change this for something better
 
-            DrawText("YOU WON", 0, 0, 4 * fontsizewin, WHITE);
-            DrawText("As a reward, you can close this window.", 0, 4 * fontsizewin, fontsizewin, WHITE);
+                DrawText("YOU WON", 0, 0, 4 * fontsizewin, YELLOW);
+                DrawText("As a reward, you can close this window.", 0, 4 * fontsizewin, fontsizewin, YELLOW);
 
-            EndDrawing();
+                EndDrawing();
+            }
         }
     }
 

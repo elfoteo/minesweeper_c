@@ -9,6 +9,7 @@
 #define GRID_W (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
 
 typedef struct Cell Cell;
+typedef struct CellPos CellPos;
 
 struct Cell {
     bool uncovered;
@@ -18,13 +19,16 @@ struct Cell {
     bool flag;
 };
 
+struct CellPos {
+    int x;
+    int y;
+};
+
 extern Cell matrix[GRID_W][GRID_H];
 
 bool is_oob(int x, int y);
-struct GetValues {
-    int x;
-    int y;
-    bool left;
-    bool right;
-};
-struct GetValues GetMouseGridValues();
+CellPos mouse_to_grid();
+
+void grid_uncover(int x, int y);
+void grid_flag(int x, int y, bool state);
+void grid_toggle_flag(int x, int y);
