@@ -17,7 +17,6 @@ struct Cell {
     bool uncovered;
     bool mine;
     int number;
-    bool fresh;
     bool flag;
 };
 

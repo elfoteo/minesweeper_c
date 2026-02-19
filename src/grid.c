@@ -25,7 +25,7 @@ void grid_init() {
             matrix[x][y].mine = 0;
             matrix[x][y].uncovered = 0;
             matrix[x][y].number = 0;
-            matrix[x][y].fresh = 0;
+            matrix[x][y].flag = 0;
         }
     }
 
