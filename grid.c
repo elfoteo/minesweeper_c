@@ -2,6 +2,8 @@
 #include "raylib.h"
 #include "utils.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
 Cell matrix[GRID_W][GRID_H];
 
 int inputx;
@@ -14,6 +16,38 @@ CellPos mouse_to_grid() {
     r.x = (int)(GetMouseX() / (CELL_SIZE + CELL_PADDING));
     r.y = (int)(GetMouseY() / (CELL_SIZE + CELL_PADDING));
     return r;
+}
+
+void grid_init() {
+    srand(time(NULL));
+    for (int x = 0; x < GRID_W; x++) {
+        for (int y = 0; y < GRID_H; y++) {
+            matrix[x][y].mine = 0;
+            matrix[x][y].uncovered = 0;
+            matrix[x][y].number = 0;
+            matrix[x][y].fresh = 0;
+        }
+    }
+
+    for (int i = 0; i < BOMBNUM;) {
+        int rand_x = rand() % GRID_W;
+        int rand_y = rand() % GRID_H;
+        if (!matrix[rand_x][rand_y].mine) {
+            matrix[rand_x][rand_y].mine = true;
+            // Loop all surrounding tiles and tile.number++;
+            for (int x = -1; x < 2; x++) {
+                for (int y = -1; y < 2; y++) {
+                    int ax = rand_x + x;
+                    int ay = rand_y + y;
+                    if (is_oob(ax, ay) || (x == 0 && y == 0)) {
+                        continue; // Skip this iteration of the loop
+                    }
+                    matrix[ax][ay].number++;
+                }
+            }
+            i++;
+        }
+    }
 }
 
 void grid_uncover(int x, int y) {
