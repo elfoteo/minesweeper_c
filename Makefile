@@ -1,5 +1,5 @@
 # Sources
-SRC = main.c grid.c button.c utils.c main_menu.c
+SRC = main.c grid.c button.c utils.c main_menu.c about_menu.c
 
 # Output names
 LINUX_OUT = build/main
@@ -19,12 +19,12 @@ RAYLIB_LIB_WIN   = $(RAYLIB_PATH)/libraylib_win.a
 # Linux settings
 CC_LINUX = gcc
 CFLAGS_LINUX = -I$(RAYLIB_PATH)
-LDFLAGS_LINUX = -L$(RAYLIB_PATH) -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+LDFLAGS_LINUX = -lGL -lm -lpthread -ldl -lrt -lX11
 
 # Windows settings
 CC_WIN = x86_64-w64-mingw32-gcc
 CFLAGS_WIN = -I$(RAYLIB_PATH)
-LDFLAGS_WIN = -L$(RAYLIB_PATH) -lraylib -lopengl32 -lgdi32 -lwinmm
+LDFLAGS_WIN = -lopengl32 -lgdi32 -lwinmm
 
 # Default target (Linux)
 all: linux
@@ -32,13 +32,13 @@ all: linux
 linux: $(LINUX_OUT)
 
 $(LINUX_OUT): $(SRC) $(RAYLIB_LIB_LINUX) | build
-	$(CC_LINUX) $(SRC) -o $(LINUX_OUT) $(CFLAGS_LINUX) $(LDFLAGS_LINUX)
+	$(CC_LINUX) $(SRC) -o $(LINUX_OUT) $(CFLAGS_LINUX) $(RAYLIB_LIB_LINUX)  $(LDFLAGS_LINUX)
 
 # Windows target
 windows: clean-raylib-win $(RAYLIB_LIB_WIN) $(WIN_OUT)
 
 $(WIN_OUT): $(SRC) $(RAYLIB_LIB_WIN) | build
-	$(CC_WIN) $(SRC) -o $(WIN_OUT) $(CFLAGS_WIN) $(LDFLAGS_WIN)
+	$(CC_WIN) $(SRC) -o $(WIN_OUT) $(CFLAGS_WIN) $(RAYLIB_LIB_WIN) $(LDFLAGS_WIN)
 
 # Build raylib for Linux and copy result to a unique file
 $(RAYLIB_LIB_LINUX):
@@ -67,6 +67,9 @@ clean-raylib-win:
 # build folder
 build:
 	mkdir -p build
+
+fullclean: clean
+	$(MAKE) -C $(RAYLIB_PATH) clean
 
 # Clean
 clean:

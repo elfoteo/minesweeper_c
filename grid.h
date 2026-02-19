@@ -1,3 +1,6 @@
+#ifndef GRID_HH
+#define GRID_HH
+
 #include "main.h"
 #include <stdbool.h>
 
@@ -32,3 +35,5 @@ void grid_init();
 void grid_uncover(int x, int y);
 void grid_flag(int x, int y, bool state);
 void grid_toggle_flag(int x, int y);
+
+#endif // GRID_HH

@@ -1,5 +1,5 @@
 #include "main.h"
-#include "button.h"
+#include "about_menu.h"
 #include "grid.h"
 #include "main_menu.h"
 #include "raylib.h"
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 #define XRAY false
-GameState game_state = STATE_MENU;
+GameState game_state = STATE_MAIN_MENU;
 
 void draw_game() {
     Color squarecolour = RED;
@@ -115,12 +115,12 @@ int main() {
                 break;
             }
 
-            case STATE_MENU: {
+            case STATE_MAIN_MENU: {
                 main_menu_draw();
                 break;
             }
             case STATE_ABOUT: {
-                ClearBackground(RED); // TODO
+                about_menu_draw();
                 break;
             }
             case STATE_EXIT_NOW: {

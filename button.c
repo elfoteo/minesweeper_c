@@ -1,12 +1,21 @@
 #include "button.h"
 #include <raylib.h>
-#include <stdio.h>
 
-long whichButton = 0;
+const ButtonStyle BUTTON_DEFAULT_STYLE = {
+    .fontSize = 24,
+    .fg = (Color){255, 255, 255, 255},
+    .fgHover = (Color){200, 200, 200, 255},
+    .fgActive = (Color){180, 180, 180, 255},
+    .bg = (Color){30, 30, 30, 255},
+    .bgHover = (Color){60, 60, 60, 255},
+    .bgActive = (Color){80, 80, 80, 255},
+};
 
-static inline long calculate_button_id(const char *text, int x, int y, int w, int h) {
-    long hash = 1469598103934665603ULL; // FNV offset basis
-    const long prime = 1099511628211ULL;
+long long whichButton = 0;
+
+static inline long long calculate_button_id(const char *text, int x, int y, int w, int h) {
+    long long hash = 1469598103934665603ULL; // FNV offset basis
+    const long long prime = 1099511628211ULL;
 
     // Hash text
     while (*text) {
@@ -15,29 +24,19 @@ static inline long calculate_button_id(const char *text, int x, int y, int w, in
     }
 
     // Hash ints
-    hash ^= (long)x;
+    hash ^= (long long)x;
     hash *= prime;
-    hash ^= (long)y;
+    hash ^= (long long)y;
     hash *= prime;
-    hash ^= (long)w;
+    hash ^= (long long)w;
     hash *= prime;
-    hash ^= (long)h;
+    hash ^= (long long)h;
     hash *= prime;
 
     return (long)hash;
 }
 
-ButtonStyle button_default_style() {
-    return (ButtonStyle){
-        .fontSize = 16,
-        .fg = (Color){255, 255, 255, 255},
-        .fgHover = (Color){200, 200, 200, 255},
-        .fgActive = (Color){180, 180, 180, 255},
-        .bg = (Color){30, 30, 30, 255},
-        .bgHover = (Color){60, 60, 60, 255},
-        .bgActive = (Color){80, 80, 80, 255},
-    };
-}
+ButtonStyle button_default_style() { return BUTTON_DEFAULT_STYLE; }
 
 bool button_draw(const char *text, int x, int y, int w, int h, const ButtonStyle s) {
     bool clicked = false;

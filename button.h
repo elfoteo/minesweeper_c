@@ -1,3 +1,6 @@
+#ifndef BUTTON_H
+#define BUTTON_H
+
 #include "raylib.h"
 
 typedef struct ButtonStyle ButtonStyle;
@@ -11,6 +14,9 @@ struct ButtonStyle {
     Color bgActive;
 };
 
+extern const ButtonStyle BUTTON_DEFAULT_STYLE;
+
 ButtonStyle button_default_style();
 bool button_draw(const char *text, int x, int y, int w, int h, const ButtonStyle s);
 bool button_draw_centered(const char *text, int x, int y, int w, int h, const ButtonStyle s);
+#endif // BUTTON_H
