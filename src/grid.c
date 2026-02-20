@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 Cell matrix[GRID_W][GRID_H];
-
-int inputx;
-int inputy;
+bool initialized = false;
 
 bool is_oob(int x, int y) { return x < 0 || x > GRID_W - 1 || y < 0 || y > GRID_H - 1; }
 
@@ -18,8 +16,7 @@ CellPos mouse_to_grid() {
     return r;
 }
 
-void grid_init() {
-    srand(time(NULL));
+static void clean_grid() {
     for (int x = 0; x < GRID_W; x++) {
         for (int y = 0; y < GRID_H; y++) {
             matrix[x][y].mine = 0;
@@ -28,11 +25,28 @@ void grid_init() {
             matrix[x][y].flag = 0;
         }
     }
+}
 
-    for (int i = 0; i < BOMBNUM;) {
+void grid_init(int safe_x, int safe_y) {
+    srand(time(NULL));
+    if (initialized) {
+        panic("Grid already initialized\n");
+    }
+
+    if (BOMBNUM > GRID_W * GRID_H - 1) {
+        panic("Too many bombs for the grid size!\n");
+    }
+    initialized = true;
+    clean_grid();
+
+    int bombs = 0;
+    do {
         int rand_x = rand() % GRID_W;
         int rand_y = rand() % GRID_H;
-        if (!matrix[rand_x][rand_y].mine) {
+        // Skip placing the bomb and try to find a new location if
+        // - A mine is already there
+        // - It's the safe spot
+        if (!matrix[rand_x][rand_y].mine && rand_x != safe_x && rand_y != safe_y) {
             matrix[rand_x][rand_y].mine = true;
             // Loop all surrounding tiles and tile.number++;
             for (int x = -1; x < 2; x++) {
@@ -45,19 +59,26 @@ void grid_init() {
                     matrix[ax][ay].number++;
                 }
             }
-            i++;
+            bombs++;
         }
-    }
+    } while (bombs < BOMBNUM);
 }
 
-void grid_uncover(int x, int y) {
+void grid_deinit() {
+    initialized = false;
+    clean_grid();
+}
+
+bool grid_is_initialized() { return initialized; }
+
+Cell *grid_uncover(int x, int y) {
     if (is_oob(x, y)) {
         panic("grid_uncover was called on a cell that was out of bounds");
-        return;
+        return (Cell *)0;
     }
     matrix[x][y].uncovered = true;
     if (matrix[x][y].number != 0) {
-        return;
+        return &matrix[x][y];
     }
     // Check 3x3 neighbours excluding the center and uncover them
     for (int x0 = -1; x0 < 2; x0++) {
@@ -69,32 +90,7 @@ void grid_uncover(int x, int y) {
             }
         }
     }
-
-    // if (matrix[x][y].number == 0) {
-    //     matrix[x][y].fresh = 1;
-    //     for (int x = 0; x < GRID_H; x++) {
-    //         for (int y = 0; y < GRID_H; y++) { // For every cell in the
-    //             if (matrix[x][y].fresh) {      // If it's fresh air
-    //                 matrix[x][y].fresh = 0;
-    //                 for (int x0 = -1; x0 < 2; x0++) {
-    //                     for (int y0 = -1; y0 < 2; y0++) {              // Check in a 3x3 area its neighbours
-    //                         if (!is_oob(x + x0, y + y0)) {             // Skip if oob
-    //                             if (!matrix[x + x0][y + y0].uncovered) // for (int
-    //                             {                                      // If its earth set it to air
-    //                                 matrix[x + x0][y + y0].uncovered = 1;
-    //                                 if (matrix[x + x0][y + y0].number == 0) {
-    //                                     matrix[x + x0][y + y0].fresh = 1;
-    //                                 }
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //                 x = 0;
-    //                 y = 0;
-    //             }
-    //         }
-    //     }
-    // }
+    return &matrix[x][y];
 }
 
 void grid_set_flagged(int x, int y, bool state) {

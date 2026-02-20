@@ -26,7 +26,6 @@ void draw_game() {
                     squarecolour = DARKBLUE;
                 if (current.mine) {
                     squarecolour = BLACK;
-                    game_state = STATE_LOSE;
                 }
             } else if (current.flag) {
                 squarecolour = YELLOW;
@@ -59,7 +58,17 @@ void draw_game() {
     }
 
     if (!hovered_cell.flag && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        grid_uncover(mouse_pos.x, mouse_pos.y);
+        if (!grid_is_initialized()) {
+            grid_init(mouse_pos.x, mouse_pos.y);
+        }
+        Cell *uncovered = grid_uncover(mouse_pos.x, mouse_pos.y);
+        // Check if its not a nullptr
+        if (uncovered != 0) {
+            if (uncovered->mine) {
+                game_state = STATE_LOSE;
+                grid_deinit();
+            }
+        }
     }
     if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
         grid_toggle_flag(mouse_pos.x, mouse_pos.y);
@@ -71,6 +80,9 @@ void draw_game() {
                 if (!matrix[x][y].uncovered && !matrix[x][y].mine)
                     game_state = STATE_PLAYING;
             }
+        }
+        if (game_state == STATE_WIN) {
+            grid_deinit();
         }
     }
 }
@@ -104,20 +116,8 @@ void draw_win_screen() {
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
-    bool guardianangel = true;
 
     while (!WindowShouldClose() && game_state != STATE_EXIT_NOW) {
-        CellPos mouse_pos = mouse_to_grid();
-        if (guardianangel && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            if (matrix[mouse_pos.x][mouse_pos.y].number != 0 || matrix[mouse_pos.x][mouse_pos.y].mine) {
-                while (guardianangel) {
-                    grid_init();
-                    if (matrix[mouse_pos.x][mouse_pos.y].number == 0 && !matrix[mouse_pos.x][mouse_pos.y].mine)
-                        guardianangel = false;
-                }
-            }
-        }
-        guardianangel = false;
         BeginDrawing();
         switch (game_state) {
             case STATE_PLAYING: {

@@ -30,8 +30,11 @@ extern Cell matrix[GRID_W][GRID_H];
 bool is_oob(int x, int y);
 CellPos mouse_to_grid();
 
-void grid_init();
-void grid_uncover(int x, int y);
+void grid_init(int safe_x, int safe_y);
+void grid_deinit();
+bool grid_is_initialized();
+
+Cell *grid_uncover(int x, int y);
 void grid_flag(int x, int y, bool state);
 void grid_toggle_flag(int x, int y);
 
