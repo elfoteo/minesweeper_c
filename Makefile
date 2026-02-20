@@ -6,7 +6,7 @@ LINUX_OUT = build/main
 WIN_OUT   = build/main.exe
 
 # Asset embedding
-RESOURCES_SRC = $(wildcard assets/*)
+RESOURCES_SRC := $(shell find assets -type f)
 RESOURCES_H   = build/resources.h
 
 # Raylib paths
