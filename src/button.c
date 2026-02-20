@@ -1,5 +1,6 @@
 #include "button.h"
 #include <raylib.h>
+#include <stdint.h>
 
 const ButtonStyle BUTTON_DEFAULT_STYLE = {
     .fontSize = 24,
@@ -11,29 +12,30 @@ const ButtonStyle BUTTON_DEFAULT_STYLE = {
     .bgActive = (Color){80, 80, 80, 255},
 };
 
-long long whichButton = 0;
+static uint64_t whichButton = 0;
 
-static inline long long calculate_button_id(const char *text, int x, int y, int w, int h) {
-    long long hash = 1469598103934665603ULL; // FNV offset basis
-    const long long prime = 1099511628211ULL;
+static inline uint64_t calculate_button_id(const char *text, int x, int y, int w, int h) {
+    uint64_t hash = 1469598103934665603ULL;
+    const uint64_t prime = 1099511628211ULL;
 
-    // Hash text
     while (*text) {
-        hash ^= (unsigned char)(*text++);
+        hash ^= (uint8_t)(*text++);
         hash *= prime;
     }
 
-    // Hash ints
-    hash ^= (long long)x;
-    hash *= prime;
-    hash ^= (long long)y;
-    hash *= prime;
-    hash ^= (long long)w;
-    hash *= prime;
-    hash ^= (long long)h;
+    hash ^= (uint64_t)x;
     hash *= prime;
 
-    return (long)hash;
+    hash ^= (uint64_t)y;
+    hash *= prime;
+
+    hash ^= (uint64_t)w;
+    hash *= prime;
+
+    hash ^= (uint64_t)h;
+    hash *= prime;
+
+    return hash;
 }
 
 ButtonStyle button_default_style() { return BUTTON_DEFAULT_STYLE; }
