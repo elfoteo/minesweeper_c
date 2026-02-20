@@ -16,10 +16,20 @@ RAYLIB_A = $(RAYLIB_PATH)/libraylib.a
 RAYLIB_LIB_LINUX = $(RAYLIB_PATH)/libraylib_linux.a
 RAYLIB_LIB_WIN   = $(RAYLIB_PATH)/libraylib_win.a
 
+# Debug flags (optional)
+DEBUG_CFLAGS_LINUX = -g3 -O0 -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined
+DEBUG_LDFLAGS_LINUX = -fsanitize=address -fsanitize=undefined
+DEBUG_CFLAGS_WIN = -g3 -O0 -fno-omit-frame-pointer
+DEBUG_LDFLAGS_WIN =
+
+LINUX_OUT_DEBUG = build/main_debug
+WIN_OUT_DEBUG = build/main_debug.exe
+
 # Linux settings
 CC_LINUX = gcc
 CFLAGS_LINUX = -I$(RAYLIB_PATH)
-LDFLAGS_LINUX = -lGL -lm -lpthread -ldl -lrt -lX11
+LDFLAGS_LINUX = -lm
+
 
 # Windows settings
 CC_WIN = x86_64-w64-mingw32-gcc
@@ -43,11 +53,25 @@ linux: $(LINUX_OUT)
 $(LINUX_OUT): $(SRC) $(RAYLIB_LIB_LINUX) | build
 	$(CC_LINUX) $(SRC) -o $(LINUX_OUT) $(CFLAGS_LINUX) $(RAYLIB_LIB_LINUX)  $(LDFLAGS_LINUX)
 
+# Linux debug build
+linux debug: $(LINUX_OUT_DEBUG)
+
+$(LINUX_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_LINUX) | build
+	$(CC_LINUX) $(SRC) -o $(LINUX_OUT_DEBUG) \
+		$(CFLAGS_LINUX) $(DEBUG_CFLAGS_LINUX) $(RAYLIB_LIB_LINUX) $(LDFLAGS_LINUX) $(DEBUG_LDFLAGS_LINUX)
+
 # Windows target
 windows: clean-raylib-win $(RAYLIB_LIB_WIN) $(WIN_OUT)
 
 $(WIN_OUT): $(SRC) $(RAYLIB_LIB_WIN) | build
 	$(CC_WIN) $(SRC) -o $(WIN_OUT) $(CFLAGS_WIN) $(RAYLIB_LIB_WIN) $(LDFLAGS_WIN)
+
+windows debug: $(WIN_OUT_DEBUG)
+
+
+$(WIN_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_WIN) | build
+	$(CC_WIN) $(SRC) -o $(WIN_OUT_DEBUG) \
+		$(CFLAGS_WIN) $(DEBUG_CFLAGS_WIN) $(RAYLIB_LIB_WIN) $(LDFLAGS_WIN)
 
 # Web target
 check-emcc:
