@@ -81,7 +81,7 @@ void draw_loose_screen() {
     ClearBackground(BLACK); // TODO change this for something better
 
     DrawText("YOU LOST", 0, 0, 4 * fontsize, GRAY);
-    DrawText("Nothing left to do but to close the window.", 0, 4 * fontsize, fontsize, GRAY);
+    DrawText("Smart Boi!!(or girl(or person))", 0, 4 * fontsize, fontsize, GRAY);
 
     if (button_draw_centered("Back", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 140, 200, 60, BUTTON_DEFAULT_STYLE)) {
         game_state = STATE_MAIN_MENU;
@@ -104,8 +104,20 @@ void draw_win_screen() {
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
+    bool guardianangel = true;
 
     while (!WindowShouldClose() && game_state != STATE_EXIT_NOW) {
+        CellPos mouse_pos = mouse_to_grid();
+        if (guardianangel && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            if (matrix[mouse_pos.x][mouse_pos.y].number != 0 || matrix[mouse_pos.x][mouse_pos.y].mine) {
+                while (guardianangel) {
+                    grid_init();
+                    if (matrix[mouse_pos.x][mouse_pos.y].number == 0 && !matrix[mouse_pos.x][mouse_pos.y].mine)
+                        guardianangel = false;
+                }
+            }
+        }
+        guardianangel = false;
         BeginDrawing();
         switch (game_state) {
             case STATE_PLAYING: {
@@ -128,6 +140,10 @@ int main() {
             }
             case STATE_ABOUT: {
                 about_menu_draw();
+                break;
+            }
+            case STATE_SETTINGS: {
+                settings_menu_draw();
                 break;
             }
             case STATE_EXIT_NOW: {
