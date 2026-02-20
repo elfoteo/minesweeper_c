@@ -1,29 +1,11 @@
 #include "button.h"
 #include "main.h"
+#include "resources.h"
 #include <raylib.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NAME_COUNT 2
-static const char *rainbowFragmentShader = "#ifdef GL_ES\n"
-                                           "precision mediump float;\n"
-                                           "#endif\n"
-
-                                           "varying vec2 fragTexCoord;\n"
-                                           "varying vec4 fragColor;\n"
-
-                                           "uniform sampler2D texture0;\n"
-                                           "uniform float time;\n"
-
-                                           "void main()\n"
-                                           "{\n"
-                                           "    vec4 texColor = texture2D(texture0, fragTexCoord);\n"
-                                           "    float wave = (gl_FragCoord.x - gl_FragCoord.y) * 0.02;\n"
-                                           "    float t = time;\n"
-                                           "    float r = 0.5 + 0.5 * sin(wave - t);\n"
-                                           "    float g = 0.5 + 0.5 * sin(wave - t + 2.094);\n"
-                                           "    float b = 0.5 + 0.5 * sin(wave - t + 4.188);\n"
-                                           "    vec3 rainbow = vec3(r, g, b);\n"
-                                           "    gl_FragColor = vec4(rainbow, texColor.a);\n"
-                                           "}\n";
 
 const char *title = "About";
 const int title_fontsize = 48;
@@ -38,7 +20,14 @@ int timeLoc = 0;
 void about_menu_draw() {
     // Load shader from memory
     if (rainbow.id == 0) {
-        rainbow = LoadShaderFromMemory(0, rainbowFragmentShader);
+        // The shader code needs to be null-terminated, but xxd doesn't do that.
+        // We need to copy it to a new buffer and add the null terminator.
+        char *shader_code = (char *)malloc(assets_rainbow_fs_len + 1);
+        memcpy(shader_code, assets_rainbow_fs, assets_rainbow_fs_len);
+        shader_code[assets_rainbow_fs_len] = '\0';
+
+        rainbow = LoadShaderFromMemory(0, shader_code);
+        free(shader_code);
         timeLoc = GetShaderLocation(rainbow, "time");
     }
 

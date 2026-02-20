@@ -5,6 +5,10 @@ SRC = $(wildcard src/*.c)
 LINUX_OUT = build/main
 WIN_OUT   = build/main.exe
 
+# Asset embedding
+RESOURCES_SRC = $(wildcard assets/*)
+RESOURCES_H   = build/resources.h
+
 # Raylib paths
 RAYLIB_PATH = external/raylib/src
 RAYLIB_LIB  = $(RAYLIB_PATH)/libraylib.a
@@ -27,13 +31,13 @@ WIN_OUT_DEBUG = build/main_debug.exe
 
 # Linux settings
 CC_LINUX = gcc
-CFLAGS_LINUX = -I$(RAYLIB_PATH)
+CFLAGS_LINUX = -I$(RAYLIB_PATH) -Ibuild
 LDFLAGS_LINUX = -lm
 
 
 # Windows settings
 CC_WIN = x86_64-w64-mingw32-gcc
-CFLAGS_WIN = -I$(RAYLIB_PATH)
+CFLAGS_WIN = -I$(RAYLIB_PATH) -Ibuild
 LDFLAGS_WIN = -lopengl32 -lgdi32 -lwinmm
 
 # Web settings
@@ -50,26 +54,26 @@ all: linux
 
 linux: $(LINUX_OUT)
 
-$(LINUX_OUT): $(SRC) $(RAYLIB_LIB_LINUX) | build
+$(LINUX_OUT): $(SRC) $(RAYLIB_LIB_LINUX) $(RESOURCES_H) | build
 	$(CC_LINUX) $(SRC) -o $(LINUX_OUT) $(CFLAGS_LINUX) $(RAYLIB_LIB_LINUX)  $(LDFLAGS_LINUX)
 
 # Linux debug build
-linux debug: $(LINUX_OUT_DEBUG)
+linux-debug: $(LINUX_OUT_DEBUG)
 
-$(LINUX_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_LINUX) | build
+$(LINUX_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_LINUX) $(RESOURCES_H) | build
 	$(CC_LINUX) $(SRC) -o $(LINUX_OUT_DEBUG) \
 		$(CFLAGS_LINUX) $(DEBUG_CFLAGS_LINUX) $(RAYLIB_LIB_LINUX) $(LDFLAGS_LINUX) $(DEBUG_LDFLAGS_LINUX)
 
 # Windows target
 windows: clean-raylib-win $(RAYLIB_LIB_WIN) $(WIN_OUT)
 
-$(WIN_OUT): $(SRC) $(RAYLIB_LIB_WIN) | build
+$(WIN_OUT): $(SRC) $(RAYLIB_LIB_WIN) $(RESOURCES_H) | build
 	$(CC_WIN) $(SRC) -o $(WIN_OUT) $(CFLAGS_WIN) $(RAYLIB_LIB_WIN) $(LDFLAGS_WIN)
 
-windows debug: $(WIN_OUT_DEBUG)
+windows-debug: $(WIN_OUT_DEBUG)
 
 
-$(WIN_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_WIN) | build
+$(WIN_OUT_DEBUG): $(SRC) $(RAYLIB_LIB_WIN) $(RESOURCES_H) | build
 	$(CC_WIN) $(SRC) -o $(WIN_OUT_DEBUG) \
 		$(CFLAGS_WIN) $(DEBUG_CFLAGS_WIN) $(RAYLIB_LIB_WIN) $(LDFLAGS_WIN)
 
@@ -83,9 +87,10 @@ web: check-emcc $(WEB_HTML) $(WEB_JS) $(WEB_WASM)
 $(WEB_DIR):
 	mkdir -p $(WEB_DIR)
 
-$(WEB_HTML) $(WEB_JS) $(WEB_WASM): $(SRC) $(RAYLIB_LIB_WEB) | $(WEB_DIR)
+$(WEB_HTML) $(WEB_JS) $(WEB_WASM): $(SRC) $(RAYLIB_LIB_WEB) $(RESOURCES_H) | $(WEB_DIR)
 	$(CC_WEB) $(SRC) -o $(WEB_HTML) \
 		-I$(RAYLIB_PATH) \
+		-Ibuild \
 		$(RAYLIB_LIB_WEB) \
 		-DPLATFORM_WEB \
 		-s USE_GLFW=3 \
@@ -119,6 +124,12 @@ $(RAYLIB_LIB_WEB):
 	$(MAKE) -C $(RAYLIB_PATH) clean
 	$(MAKE) -C $(RAYLIB_PATH) PLATFORM=PLATFORM_WEB -j$(shell nproc)
 	cp $(RAYLIB_PATH)/libraylib.web.a $@
+
+$(RESOURCES_H): $(RESOURCES_SRC) | build
+	rm -f $@
+	for f in $(RESOURCES_SRC); do \
+		xxd -i $$f >> $@; \
+	done
 
 # keep a clean-raylib-win target (optional helper)
 clean-raylib-win:
