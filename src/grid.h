@@ -7,8 +7,8 @@
 #define CELL_SIZE 40
 #define CELL_PADDING 10
 #define BOMBNUM 10
-#define GRID_H (SCREEN_WIDTH / (CELL_SIZE + CELL_PADDING))
-#define GRID_W (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
+#define GRID_H 10 // (SCREEN_WIDTH / (CELL_SIZE + CELL_PADDING))
+#define GRID_W 10 // (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
 
 typedef struct Cell Cell;
 typedef struct CellPos CellPos;

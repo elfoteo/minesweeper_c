@@ -1,6 +1,6 @@
-#include "button.h"
-#include "main.h"
-#include "resources.h"
+#include "../asset_declarations.h"
+#include "../button.h"
+#include "../main.h"
 #include <raylib.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +17,7 @@ const char *names[NAME_COUNT] = {"pako", "elfoteo"};
 Shader rainbow = {.id = 0, .locs = 0};
 int timeLoc = 0;
 
-void about_menu_draw() {
+void screen_about_draw() {
     // Load shader from memory
     if (rainbow.id == 0) {
         // The shader code needs to be null-terminated, but xxd doesn't do that.
