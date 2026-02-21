@@ -3,6 +3,7 @@
 #include "../main.h"
 #include "screens.h"
 #include <raylib.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #define ELEMENT_PADDING 5
@@ -15,6 +16,65 @@ static Texture2D flag_textures[FLAG_FRAMES_COUNT] = {0};
 static const float BANNER_HEIGHT = 100.0f;
 static int flag_current_frame = 0;
 static float timer = 0;
+
+typedef struct Vector2i CellPos;
+typedef struct Tile Tile;
+struct Tile {
+    Cell *cell;
+    bool hovered;
+};
+// Like Vector2 but for integers
+struct Vector2i {
+    int x;
+    int y;
+};
+
+static CellPos mouse_to_grid(Vector2 mouse_pos) {
+    CellPos r;
+    r.x = (int)(mouse_pos.x / (CELL_SIZE + CELL_PADDING));
+    r.y = (int)(mouse_pos.y / (CELL_SIZE + CELL_PADDING));
+    return r;
+}
+
+static void tile_draw(Tile *tile, int x, int y) {
+    Color squarecolour = RED;
+
+    if (tile->hovered) {
+        float d = 0.65;
+        squarecolour = (Color){230 * d, 41 * d, 55 * d, 255};
+    }
+
+    if (tile->cell->flag) {
+        squarecolour = tile->hovered ? ORANGE : YELLOW;
+    } else if (tile->cell->uncovered) {
+        if (tile->cell->mine)
+            squarecolour = BLACK;
+        else
+            squarecolour = tile->hovered ? DARKBLUE : BLUE;
+    }
+
+#if XRAY
+    if (!current.uncovered)
+        squarecolour = DARKPURPLE;
+#endif
+    // Gray dropshadow
+    DrawRectangle(x + 4, y + 4, CELL_SIZE, CELL_SIZE, GRAY);
+    // Draw the tile
+    DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, squarecolour);
+    if (tile->cell->uncovered || XRAY) {
+        // Assume its a mine, if its a number correct it later
+        const char *number = "*";
+
+        if (!tile->cell->mine) {
+            number = TextFormat("%i", tile->cell->number);
+        }
+
+        DrawText(number, x + 12, y + 7, 30, WHITE);
+    } else if (tile->cell->flag) {
+        Vector2 flag_pos = {x - 4, y - 4};
+        DrawTextureEx(flag_textures[flag_current_frame], flag_pos, 0.0f, 3, WHITE);
+    }
+}
 
 void screen_game_draw() {
     int cursor = 0;
@@ -79,65 +139,41 @@ void screen_game_draw() {
 
     Vector2 pos = {ELEMENT_PADDING, BANNER_HEIGHT / 2 - (scale * watch_texture.height) / 2};
     int font_size = watch_texture.height * scale;
-    DrawTextureEx(watch_texture, pos, 0.0f, scale, WHITE);
-    pos.x += watch_texture.width * scale + ELEMENT_PADDING;
-    DrawText("12:34", pos.x, pos.y, font_size, WHITE);
+    if (!grid_is_initialized()) {
+        static char *str = "Click to start";
+        DrawText(str, SCREEN_WIDTH / 2 - MeasureText(str, font_size) / 2, pos.y, font_size, WHITE);
+    } else {
+        DrawTextureEx(watch_texture, pos, 0.0f, scale, WHITE);
+        pos.x += watch_texture.width * scale + ELEMENT_PADDING;
+        DrawText("12:34", pos.x, pos.y, font_size, WHITE);
 
-    // Now walk from right to left for the flags : )
-    pos.x = SCREEN_WIDTH - flag_textures[flag_current_frame].width * scale - ELEMENT_PADDING;
-    DrawTextureEx(flag_textures[flag_current_frame], pos, 0.0f, scale, WHITE);
+        // Now walk from right to left for the flags : )
+        pos.x = SCREEN_WIDTH - flag_textures[flag_current_frame].width * scale - ELEMENT_PADDING;
+        DrawTextureEx(flag_textures[flag_current_frame], pos, 0.0f, scale, WHITE);
 
-    static int FLAGS_PLACED = 11;
-    static int FLAGS_TOTAL = 12;
-    static char flags_string_buf[32];
-    snprintf(flags_string_buf, 32, "%d/%d", FLAGS_PLACED, FLAGS_TOTAL);
-    pos.x -= MeasureText(flags_string_buf, font_size);
-    DrawText(flags_string_buf, pos.x, pos.y, font_size, WHITE);
+        static int FLAGS_PLACED = 11;
+        static int FLAGS_TOTAL = 12;
+        static char flags_string_buf[32];
+        snprintf(flags_string_buf, 32, "%d/%d", FLAGS_PLACED, FLAGS_TOTAL);
+        pos.x -= MeasureText(flags_string_buf, font_size);
+        DrawText(flags_string_buf, pos.x, pos.y, font_size, WHITE);
+    }
 
     cursor += 100;
 
-    Color squarecolour = RED;
-    CellPos mouse_pos = mouse_to_grid();
+    CellPos mouse_pos = mouse_to_grid((Vector2){GetMouseX(), GetMouseY() - cursor});
+
     Cell hovered_cell = matrix[mouse_pos.x][mouse_pos.y];
     for (int x = 0; x < GRID_W; x++) {
         for (int y = 0; y < GRID_H; y++) {
             Cell current = matrix[x][y];
-            if (current.uncovered) {
-                squarecolour = BLUE;
-                if (mouse_pos.x == x && mouse_pos.y == y)
-                    squarecolour = DARKBLUE;
-                if (current.mine) {
-                    squarecolour = BLACK;
-                }
-            } else if (current.flag) {
-                squarecolour = YELLOW;
-                if (mouse_pos.x == x && mouse_pos.y == y)
-                    squarecolour = ORANGE;
-            } else if (mouse_pos.x == x && mouse_pos.y == y)
-                squarecolour = MAROON;
-            else
-                squarecolour = RED;
-#if XRAY
-            if (!current.uncovered) {
-                squarecolour = DARKPURPLE;
-            }
-#endif
+            Tile tile;
+            tile.cell = &current;
+            tile.hovered = mouse_pos.x == x && mouse_pos.y == y;
+
             int cell_x = x * (CELL_SIZE + CELL_PADDING);
             int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
-            // Gray dropshadow
-            DrawRectangle(cell_x + 4, cell_y + 4, CELL_SIZE, CELL_SIZE, GRAY);
-            // Draw the tile
-            DrawRectangle(cell_x, cell_y, CELL_SIZE, CELL_SIZE, squarecolour);
-            if (current.uncovered || XRAY) {
-                // Assume its a mine, if its a number correct it later
-                const char *number = "*";
-
-                if (!current.mine) {
-                    number = TextFormat("%i", matrix[x][y].number);
-                }
-
-                DrawText(number, cell_x + 12, cell_y + 7, 30, WHITE);
-            }
+            tile_draw(&tile, cell_x, cell_y);
         }
     }
 
@@ -154,11 +190,12 @@ void screen_game_draw() {
             }
         }
     }
-    if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+    if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && grid_is_initialized()) {
         grid_toggle_flag(mouse_pos.x, mouse_pos.y);
     }
     if (game_state != STATE_LOSE) {
         game_state = STATE_WIN;
+        // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
         for (int x = 0; x < GRID_W; x++) {
             for (int y = 0; y < GRID_H; y++) {
                 if (!matrix[x][y].uncovered && !matrix[x][y].mine)

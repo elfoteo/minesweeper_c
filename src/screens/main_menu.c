@@ -51,9 +51,9 @@ static void menu_tiles_init() {
     const int MAX_ATTEMPTS = 50;
 
     float cx = SCREEN_WIDTH * 0.5f;
-    float cy = SCREEN_HEIGHT * 0.5f;
+    float cy = SCREEN_HEIGHT * 0.5f - 60;
     float rx = SCREEN_WIDTH * 0.4f;
-    float ry = SCREEN_HEIGHT * 0.55f;
+    float ry = SCREEN_HEIGHT * 0.5f;
 
     for (int i = 0; i < MENU_TILE_COUNT; i++) {
 
@@ -64,8 +64,8 @@ static void menu_tiles_init() {
         for (int attempt = 0; attempt < MAX_ATTEMPTS && !placed; attempt++) {
 
             Vector2 candidate;
-            candidate.x = GetRandomValue(0, SCREEN_WIDTH);
-            candidate.y = GetRandomValue(0, SCREEN_HEIGHT);
+            candidate.x = GetRandomValue(10, SCREEN_WIDTH - 10);
+            candidate.y = GetRandomValue(10, SCREEN_HEIGHT - 10);
 
             float dx = (candidate.x - cx) / rx;
             float dy = (candidate.y - cy) / ry;

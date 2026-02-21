@@ -9,13 +9,6 @@ bool initialized = false;
 
 bool is_oob(int x, int y) { return x < 0 || x > GRID_W - 1 || y < 0 || y > GRID_H - 1; }
 
-CellPos mouse_to_grid() {
-    CellPos r;
-    r.x = (int)(GetMouseX() / (CELL_SIZE + CELL_PADDING));
-    r.y = (int)(GetMouseY() / (CELL_SIZE + CELL_PADDING));
-    return r;
-}
-
 static void clean_grid() {
     for (int x = 0; x < GRID_W; x++) {
         for (int y = 0; y < GRID_H; y++) {
