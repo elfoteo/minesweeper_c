@@ -120,9 +120,9 @@ static void screen_difficulty_draw_custom_edit(GridSettings *c) {
         else if (CheckCollisionPointRec(mouse, grid_right))
             c->grid_size++;
         else if (CheckCollisionPointRec(mouse, mines_up))
-            c->mines++;
-        else if (CheckCollisionPointRec(mouse, mines_down))
             c->mines--;
+        else if (CheckCollisionPointRec(mouse, mines_down))
+            c->mines++;
     }
 
     c->grid_size = clamp_i(c->grid_size, 3, 20);
