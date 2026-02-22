@@ -206,7 +206,7 @@ void screen_menu_draw() {
         if (button_draw_centered(buttons[i].label, SCREEN_WIDTH / 2, cursor, 200, BUTTON_HEIGHT, style)) {
             switch (buttons[i].id) {
                 case BTN_PLAY: {
-                    game_state = STATE_PLAYING;
+                    game_state = STATE_DIFFICULTY;
                     break;
                 }
                 case BTN_SETTINGS: {

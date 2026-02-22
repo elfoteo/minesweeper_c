@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "screens/screens.h"
 #include "tile_renderer.h"
+#include "utils.h"
 #include <limits.h>
 #include <stdbool.h>
 
@@ -11,12 +12,23 @@ int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
     tile_renderer_init();
+    GridSettings *gs = 0;
 
     while (!WindowShouldClose() && game_state != STATE_EXIT_NOW) {
         BeginDrawing();
         switch (game_state) {
+            case STATE_DIFFICULTY: {
+                gs = screen_difficulty_draw();
+                if (gs != 0) {
+                    game_state = STATE_PLAYING;
+                }
+                break;
+            }
             case STATE_PLAYING: {
-                screen_game_draw();
+                if (gs == 0) {
+                    panic("Grid Settings is a nullptr somehow\n");
+                }
+                screen_game_draw(gs);
                 break;
             }
             case STATE_LOSE: {

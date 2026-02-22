@@ -32,7 +32,7 @@ static CellPos mouse_to_grid(Vector2 mouse_pos) {
     return r;
 }
 
-void screen_game_draw() {
+void screen_game_draw(GridSettings *gs) {
     int cursor = 0;
     if (!init) {
         init = true;
@@ -94,41 +94,40 @@ void screen_game_draw() {
 
     // Update
     if (!game_ended) {
+        // When left button pressed, start timing
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             long_click_started = GetTime();
             long_click_pressed = false;
         }
-        if (long_click_started + LONG_CLICK_THRESHOLD < GetTime() && IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !long_click_pressed) {
-            grid_toggle_flag(mouse_pos.x, mouse_pos.y);
-            long_click_pressed = true;
-        }
-        if (!hovered_cell.flag && IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !long_click_pressed) {
-            if (!grid_is_initialized()) {
-                grid_init(mouse_pos.x, mouse_pos.y);
+
+        // While holding, check if long click threshold reached
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !long_click_pressed) {
+            if (GetTime() - long_click_started >= LONG_CLICK_THRESHOLD) {
+                grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+                long_click_pressed = true; // prevent multiple toggles in same hold
             }
-            Cell *uncovered = grid_uncover(mouse_pos.x, mouse_pos.y);
-            // Check if its not a nullptr
-            if (uncovered != 0) {
-                if (uncovered->mine) {
+        }
+
+        // On release, perform normal click if long click did not trigger
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+            if (!long_click_pressed) {
+                // First click initializes grid if needed
+                if (!grid_is_initialized()) {
+                    grid_init(mouse_pos.x, mouse_pos.y);
+                }
+                Cell *uncovered = grid_uncover(mouse_pos.x, mouse_pos.y);
+                if (uncovered && uncovered->mine) {
                     game_ended = true;
                 }
             }
+            // Reset long click state on release
+            long_click_pressed = false;
+            long_click_started = 0;
         }
+
+        // Optional: right click flagging
         if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && grid_is_initialized()) {
             grid_toggle_flag(mouse_pos.x, mouse_pos.y);
-        }
-        if (game_state != STATE_LOSE) {
-            game_state = STATE_WIN;
-            // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
-            for (int x = 0; x < GRID_W; x++) {
-                for (int y = 0; y < GRID_H; y++) {
-                    if (!matrix[x][y].uncovered && !matrix[x][y].mine)
-                        game_state = STATE_PLAYING;
-                }
-            }
-            if (game_state == STATE_WIN) {
-                grid_deinit();
-            }
         }
     } else {
         if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
