@@ -5,14 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NAME_COUNT 2
+#define NAME_COUNT 3
 
 const char *title = "About";
 const int title_fontsize = 48;
 const char *desc1 = "Minesweeper written in C using raylib.\n";
 const char *desc2 = "Thanks for playing!";
 const char *credits = "People who worked on the project:";
-const char *names[NAME_COUNT] = {"pako", "elfoteo"};
+const char *names[NAME_COUNT] = {"pako", "elfoteo", "ding yu"};
 
 Shader rainbow = {.id = 0, .locs = 0};
 int timeLoc = 0;
