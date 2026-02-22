@@ -1,14 +1,21 @@
 #include "../button.h"
 #include "../main.h"
+#include "../tile_renderer.h"
 #include <raylib.h>
 #include <raymath.h>
 #include <stdbool.h>
-#include <string.h>
 
 #define BUTTON_COUNT 4
 #define BUTTON_HEIGHT 60
 #define BUTTON_SPACING 20
 #define MENU_TILE_COUNT 35
+
+static Cell CELL_RED = {.uncovered = false, .number = 0, .flag = false, .mine = false};
+static Tile TILE_RED = {.hovered = false, .cell = &CELL_RED};
+
+// The number will be modified at runtime
+static Cell CELL_NUMBER = {.uncovered = true, .number = 0, .flag = false, .mine = false};
+static Tile TILE_NUMBER = {.hovered = false, .cell = &CELL_NUMBER};
 
 typedef enum { BTN_PLAY, BTN_SETTINGS, BTN_ABOUT, BTN_EXIT } ButtonId;
 typedef struct {
@@ -17,11 +24,9 @@ typedef struct {
     Vector2 base_pos;
     float size;
     float rotation;
-    Color color;
+    Tile *tile;
     int number;
 } MenuTile;
-
-#define MENU_PARTICLE_COUNT 100
 
 static MenuTile menu_tiles[MENU_TILE_COUNT];
 static bool menu_tiles_initialized = false;
@@ -112,10 +117,10 @@ static void menu_tiles_init() {
         menu_tiles[i].vel = (Vector2){0, 0};
 
         if (GetRandomValue(0, 1)) {
-            menu_tiles[i].color = BLUE;
+            menu_tiles[i].tile = &TILE_NUMBER;
             menu_tiles[i].number = random_weighted_number();
         } else {
-            menu_tiles[i].color = RED;
+            menu_tiles[i].tile = &TILE_RED;
             menu_tiles[i].number = -1;
         }
 
@@ -139,7 +144,7 @@ static void menu_tiles_draw() {
         Vector2 dir = Vector2Subtract(t->pos, mouse);
         float dist = Vector2Length(dir);
 
-        if (dist < 50 && dist > 0.01f) {
+        if (dist < 50 && dist > 0.01f && IsWindowFocused()) {
             // Make the mouse push the tile around
             Vector2 push = Vector2Scale(Vector2Normalize(dir), (50 - dist) * 0.1f);
             t->vel = Vector2Add(t->vel, push);
@@ -169,22 +174,9 @@ static void menu_tiles_draw() {
         // Smooth rotation
         t->rotation += (targetRotation - t->rotation) * 0.15f;
 
-        // TODO: I'd like a tile renderer to avoid duplicate code
-        // Drop shadow
-        DrawRectanglePro((Rectangle){t->pos.x + 3, t->pos.y + 3, t->size, t->size}, (Vector2){t->size / 2, t->size / 2}, t->rotation, GRAY);
+        t->tile->cell->number = t->number; // Update the number
 
-        // Actual tile
-        DrawRectanglePro((Rectangle){t->pos.x, t->pos.y, t->size, t->size}, (Vector2){t->size / 2, t->size / 2}, t->rotation, t->color);
-
-        // Number
-        if (t->color.b == BLUE.b) {
-            const char *txt = TextFormat("%d", t->number);
-
-            float fontSize = t->size * 0.6f;
-            float textW = MeasureText(txt, fontSize);
-
-            DrawText(txt, t->pos.x - textW / 2, t->pos.y - fontSize / 2, fontSize, WHITE);
-        }
+        tile_renderer_draw(t->tile, t->pos.x, t->pos.y, t->size, t->rotation);
     }
 }
 

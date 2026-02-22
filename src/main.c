@@ -1,7 +1,7 @@
 #include "main.h"
-#include "grid.h"
 #include "raylib.h"
 #include "screens/screens.h"
+#include "tile_renderer.h"
 #include <limits.h>
 #include <stdbool.h>
 
@@ -10,6 +10,7 @@ GameState game_state = STATE_MAIN_MENU;
 int main() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
+    tile_renderer_init();
 
     while (!WindowShouldClose() && game_state != STATE_EXIT_NOW) {
         BeginDrawing();
