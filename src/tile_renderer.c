@@ -1,5 +1,6 @@
 #include "tile_renderer.h"
 #include "asset_declarations.h"
+#include "main.h"
 #include "utils.h"
 #include <raylib.h>
 #include <stdbool.h>
@@ -8,6 +9,7 @@
 #define FLAG_FRAME_TIME 0.15     // in seconds
 
 static bool initialized = false;
+static Texture2D mine_texture = {0};
 static Texture2D flag_textures[FLAG_FRAMES_COUNT] = {0};
 static int flag_current_frame = 0;
 static float timer = 0;
@@ -60,6 +62,10 @@ void tile_renderer_init() {
         flag_textures[i] = LoadTextureFromImage(frame);
         UnloadImage(frame);
     }
+    // Mine
+    Image mine = LoadImageFromMemory(".png", assets_mine_png, assets_mine_png_len);
+    mine_texture = LoadTextureFromImage(mine);
+    UnloadImage(mine);
 }
 
 void tile_renderer_update() {
@@ -95,15 +101,11 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
             squarecolour = tile->hovered ? DARKBLUE : BLUE;
     }
 
-#if XRAY
-    if (!current.uncovered)
-        squarecolour = DARKPURPLE;
-#endif
     // Gray dropshadow
     DrawRectanglePro((Rectangle){x + 4, y + 4, size, size}, (Vector2){size / 2, size / 2}, rot, GRAY);
     // Draw the tile
     DrawRectanglePro((Rectangle){x, y, size, size}, (Vector2){size / 2, size / 2}, rot, squarecolour);
-    if (tile->cell->uncovered || XRAY) {
+    if (tile->cell->uncovered && !tile->cell->mine) {
         // Assume its a mine, if its a number correct it later
         const char *number = "*";
 
@@ -118,5 +120,9 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
     } else if (tile->cell->flag) {
         Vector2 flag_pos = {x - size / 2 - 4, y - size / 2 - 4};
         DrawTextureEx(flag_textures[flag_current_frame], flag_pos, 0.0f, 3, WHITE);
+    }
+    if (tile->cell->mine && (tile->cell->uncovered || XRAY)) {
+        Vector2 flag_pos = {x - size / 2 - 4, y - size / 2 - 4};
+        DrawTextureEx(mine_texture, flag_pos, 0.0f, 3, WHITE);
     }
 }
