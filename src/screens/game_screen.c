@@ -12,6 +12,11 @@
 static bool init = false;
 static Texture2D watch_texture = {0};
 static const float BANNER_HEIGHT = 100.0f;
+static const float LONG_CLICK_THRESHOLD = 1; // In seconds
+static int long_click_started = 0;
+static bool long_click_pressed = false;
+
+static bool game_ended = false;
 
 typedef struct Vector2i CellPos;
 // Like Vector2 but for integers
@@ -47,6 +52,11 @@ void screen_game_draw() {
     if (!grid_is_initialized()) {
         static char *str = "Click to start";
         DrawText(str, SCREEN_WIDTH / 2 - MeasureText(str, font_size) / 2, pos.y, font_size, WHITE);
+    } else if (game_ended) {
+        static char *str = "Game Over";
+        DrawText(str, SCREEN_WIDTH / 2 - MeasureText(str, font_size) / 2, pos.y - ELEMENT_PADDING * 3, font_size, WHITE);
+        static char *str2 = "Click to continue";
+        DrawText(str2, SCREEN_WIDTH / 2 - MeasureText(str2, 20) / 2, pos.y + font_size - ELEMENT_PADDING * 2, 20, WHITE);
     } else {
         DrawTextureEx(watch_texture, pos, 0.0f, scale, WHITE);
         pos.x += watch_texture.width * scale + ELEMENT_PADDING;
@@ -66,8 +76,8 @@ void screen_game_draw() {
 
     cursor += 100;
 
+    // Draw the grid
     CellPos mouse_pos = mouse_to_grid((Vector2){GetMouseX(), GetMouseY() - cursor});
-
     Cell hovered_cell = matrix[mouse_pos.x][mouse_pos.y];
     for (int x = 0; x < GRID_W; x++) {
         for (int y = 0; y < GRID_H; y++) {
@@ -82,33 +92,49 @@ void screen_game_draw() {
         }
     }
 
-    if (!hovered_cell.flag && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        if (!grid_is_initialized()) {
-            grid_init(mouse_pos.x, mouse_pos.y);
+    // Update
+    if (!game_ended) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            long_click_started = GetTime();
+            long_click_pressed = false;
         }
-        Cell *uncovered = grid_uncover(mouse_pos.x, mouse_pos.y);
-        // Check if its not a nullptr
-        if (uncovered != 0) {
-            if (uncovered->mine) {
-                game_state = STATE_LOSE;
+        if (long_click_started + LONG_CLICK_THRESHOLD < GetTime() && IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !long_click_pressed) {
+            grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+            long_click_pressed = true;
+        }
+        if (!hovered_cell.flag && IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && !long_click_pressed) {
+            if (!grid_is_initialized()) {
+                grid_init(mouse_pos.x, mouse_pos.y);
+            }
+            Cell *uncovered = grid_uncover(mouse_pos.x, mouse_pos.y);
+            // Check if its not a nullptr
+            if (uncovered != 0) {
+                if (uncovered->mine) {
+                    game_ended = true;
+                }
+            }
+        }
+        if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && grid_is_initialized()) {
+            grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+        }
+        if (game_state != STATE_LOSE) {
+            game_state = STATE_WIN;
+            // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
+            for (int x = 0; x < GRID_W; x++) {
+                for (int y = 0; y < GRID_H; y++) {
+                    if (!matrix[x][y].uncovered && !matrix[x][y].mine)
+                        game_state = STATE_PLAYING;
+                }
+            }
+            if (game_state == STATE_WIN) {
                 grid_deinit();
             }
         }
-    }
-    if (!hovered_cell.uncovered && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && grid_is_initialized()) {
-        grid_toggle_flag(mouse_pos.x, mouse_pos.y);
-    }
-    if (game_state != STATE_LOSE) {
-        game_state = STATE_WIN;
-        // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
-        for (int x = 0; x < GRID_W; x++) {
-            for (int y = 0; y < GRID_H; y++) {
-                if (!matrix[x][y].uncovered && !matrix[x][y].mine)
-                    game_state = STATE_PLAYING;
-            }
-        }
-        if (game_state == STATE_WIN) {
+    } else {
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            game_state = STATE_LOSE;
             grid_deinit();
+            game_ended = false;
         }
     }
 }

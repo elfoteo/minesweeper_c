@@ -96,7 +96,7 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
         squarecolour = tile->hovered ? ORANGE : YELLOW;
     } else if (tile->cell->uncovered) {
         if (tile->cell->mine)
-            squarecolour = BLACK;
+            squarecolour = RED;
         else
             squarecolour = tile->hovered ? DARKBLUE : BLUE;
     }
@@ -118,11 +118,21 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
 
         DrawTextPro(GetFontDefault(), number, (Vector2){x, y}, (Vector2){textSize.x / 2, textSize.y / 2}, rot, size, 1, WHITE);
     } else if (tile->cell->flag) {
-        Vector2 flag_pos = {x - size / 2 - 4, y - size / 2 - 4};
-        DrawTextureEx(flag_textures[flag_current_frame], flag_pos, 0.0f, 3, WHITE);
+        Texture2D tex = flag_textures[flag_current_frame];
+
+        Rectangle src = {0, 0, tex.width, tex.height};
+        Rectangle dst = {x, y, size, size};
+        Vector2 origin = {size / 2, size / 2};
+
+        DrawTexturePro(tex, src, dst, origin, rot, WHITE);
     }
     if (tile->cell->mine && (tile->cell->uncovered || XRAY)) {
-        Vector2 flag_pos = {x - size / 2 - 4, y - size / 2 - 4};
-        DrawTextureEx(mine_texture, flag_pos, 0.0f, 3, WHITE);
+        Texture2D tex = mine_texture;
+
+        Rectangle src = {0, 0, tex.width, tex.height};
+        Rectangle dst = {x, y, size, size};
+        Vector2 origin = {size / 2, size / 2};
+
+        DrawTexturePro(tex, src, dst, origin, rot, WHITE);
     }
 }
