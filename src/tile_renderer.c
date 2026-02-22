@@ -114,7 +114,6 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
 
         Vector2 textSize = MeasureTextEx(font, number, font_size, FONT_SPACING);
 
-        float text_w = MeasureText(number, size);
         DrawTextPro(GetFontDefault(), number, (Vector2){x, y}, (Vector2){textSize.x / 2, textSize.y / 2}, rot, size, 1, WHITE);
     } else if (tile->cell->flag) {
         Vector2 flag_pos = {x - size / 2 - 4, y - size / 2 - 4};

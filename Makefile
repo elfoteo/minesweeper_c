@@ -175,10 +175,15 @@ $(ASSET_DECLARATIONS_H): $(RESOURCES_H) | build
 	@echo "Generating $(ASSET_DECLARATIONS_H) from $(RESOURCES_H)..."
 	@echo "#ifndef ASSET_DECLARATIONS_H" > $@
 	@echo "#define ASSET_DECLARATIONS_H" >> $@
+	@echo "" >> $@
 	@# Generate extern declarations for unsigned char arrays
-	@grep -E 'unsigned char assets_.*\[\]' $< | sed -E 's/unsigned char (assets_.*\[\]) = \{/extern unsigned char \1;/' >> $@
-	@# Generate extern declarations for unsigned int lengths
-	@grep -E 'unsigned int assets_.*_len =' $< | sed -E 's/unsigned int (assets_.*_len) = [0-9]+;/extern unsigned int \1;/' >> $@
+	@grep -E '^unsigned char assets_.*\[\] =' $< | \
+		sed -E 's/^unsigned char (assets_.*\[\]) = .*/extern unsigned char \1;/' >> $@
+	@echo "" >> $@
+	@# Generate extern declarations for unsigned int lengths (fix extern const order)
+	@grep -E '^unsigned int assets_.*_len =' $< | \
+		sed -E 's/^unsigned int (assets_.*_len) = .*/extern const unsigned int \1;/' >> $@
+	@echo "" >> $@
 	@echo "#endif // ASSET_DECLARATIONS_H" >> $@
 
 # ----------------------------
