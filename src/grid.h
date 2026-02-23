@@ -30,5 +30,6 @@ bool grid_is_initialized();
 Cell *grid_uncover(int x, int y);
 void grid_flag(int x, int y, bool state);
 void grid_toggle_flag(int x, int y);
+bool grid_is_flagged(int x, int y);
 
 #endif // GRID_HH

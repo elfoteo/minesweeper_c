@@ -240,9 +240,6 @@ GridSettings *screen_difficulty_draw() {
     int title_w = MeasureText(title_str, (int)FONT_SIZE);
     DrawText(title_str, SCREEN_WIDTH / 2 - title_w / 2, 80 - (int)(FONT_SIZE / 2.0f), (int)FONT_SIZE, WHITE);
 
-    int prev_idx = wrap_index(current_mode - 1);
-    int next_idx = wrap_index(current_mode + 1);
-
     float center_x = (float)SCREEN_WIDTH / 2.0f;
     float center_y = (float)SCREEN_HEIGHT / 2.0f;
 

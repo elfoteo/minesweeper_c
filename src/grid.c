@@ -70,9 +70,11 @@ Cell *grid_uncover(int x, int y) {
         return (Cell *)0;
     }
     matrix[x][y].uncovered = true;
-    if (matrix[x][y].number != 0) {
+    matrix[x][y].flag = false;
+    if (matrix[x][y].number != 0 || matrix[x][y].mine) {
         return &matrix[x][y];
     }
+
     // Check 3x3 neighbours excluding the center and uncover them
     for (int x0 = -1; x0 < 2; x0++) {
         for (int y0 = -1; y0 < 2; y0++) {
@@ -94,4 +96,17 @@ void grid_set_flagged(int x, int y, bool state) {
     matrix[x][y].flag = state;
 }
 
-void grid_toggle_flag(int x, int y) { matrix[x][y].flag = !matrix[x][y].flag; }
+bool grid_is_flagged(int x, int y) {
+    if (is_oob(x, y)) {
+        panic("grid_is_flagged was called on a cell that was out of bounds");
+        return false;
+    }
+    return matrix[x][y].flag;
+}
+
+void grid_toggle_flag(int x, int y) {
+    if (matrix[x][y].uncovered) {
+        return;
+    }
+    matrix[x][y].flag = !matrix[x][y].flag;
+}
