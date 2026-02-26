@@ -1,10 +1,11 @@
+#include "../button.h"
 #include "../main.h"
 #include "screens.h"
 #include <raylib.h>
 #include <stdbool.h>
 #include <string.h>
 
-#define BUTTON_COUNT 4
+#define BUTTON_COUNT 3
 #define BUTTON_HEIGHT 60
 #define BUTTON_SPACING 20
 // No clue on how you want to handle the results for each setting, rn its an array, but i'd use a var for every field
@@ -66,6 +67,12 @@ void screen_settings_draw() {
         something_hovered |= draw_textbox(textboxes_strings[i], 5, SCREEN_WIDTH / 2, cursor, 200, BUTTON_HEIGHT);
         // later on we can put that bomb number = textbox or something
         cursor += BUTTON_SPACING + BUTTON_HEIGHT;
+    }
+    if (button_draw_centered("Back", SCREEN_WIDTH / 2 - 55, 430, 90, 60, BUTTON_DEFAULT_STYLE)) {
+        game_state = STATE_MAIN_MENU;
+    }
+    if (button_draw_centered("Save", SCREEN_WIDTH / 2 + 55, 430, 90, 60, BUTTON_DEFAULT_STYLE)) {
+        game_state = STATE_MAIN_MENU;
     }
     if (something_hovered) {
         // Set the window's cursor to the I-Beam
