@@ -82,19 +82,22 @@ void screen_game_draw(GridSettings *gs) {
     Vector2 raw_mouse = (Vector2){(float)GetMouseX(), (float)(GetMouseY() - cursor)};
     CellPos mouse_pos = mouse_to_grid(raw_mouse);
 
-    bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < GRID_W && mouse_pos.y >= 0 && mouse_pos.y < GRID_H);
+    bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < state.grid_w && mouse_pos.y >= 0 && mouse_pos.y < state.grid_h);
 
     // Draw the grid
-    for (int x = 0; x < GRID_W; x++) {
-        for (int y = 0; y < GRID_H; y++) {
-            // point tile.cell at actual matrix cell (don't take address of temporary)
-            Tile tile;
-            tile.cell = &matrix[x][y];
-            tile.hovered = mouse_in_bounds && (mouse_pos.x == x && mouse_pos.y == y);
+    if (grid_is_initialized()) {
 
-            int cell_x = x * (CELL_SIZE + CELL_PADDING);
-            int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
-            tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2, cell_y + CELL_SIZE / 2, CELL_SIZE, 0.0f);
+        for (int x = 0; x < state.grid_w; x++) {
+            for (int y = 0; y < state.grid_h; y++) {
+                // point tile.cell at actual matrix cell (don't take address of temporary)
+                Tile tile;
+                tile.cell = &matrix[x][y];
+                tile.hovered = mouse_in_bounds && (mouse_pos.x == x && mouse_pos.y == y);
+
+                int cell_x = x * (CELL_SIZE + CELL_PADDING);
+                int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
+                tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2, cell_y + CELL_SIZE / 2, CELL_SIZE, 0.0f);
+            }
         }
     }
 
@@ -123,7 +126,7 @@ void screen_game_draw(GridSettings *gs) {
                 if (mouse_in_bounds) {
                     // First click initializes grid
                     if (!grid_is_initialized()) {
-                        grid_init(mouse_pos.x, mouse_pos.y);
+                        grid_init(mouse_pos.x, mouse_pos.y, gs->grid_size, gs->grid_size, gs->mines);
                     }
                     // Prevent accidental uncover if the cell is flagged
                     if (!grid_is_flagged(mouse_pos.x, mouse_pos.y)) {
@@ -140,22 +143,25 @@ void screen_game_draw(GridSettings *gs) {
         }
 
         // right click flagging
-        if (mouse_in_bounds && !matrix[mouse_pos.x][mouse_pos.y].uncovered && IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) &&
-            grid_is_initialized()) {
-            grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+        if (grid_is_initialized()) {
+            if (mouse_in_bounds && !matrix[mouse_pos.x][mouse_pos.y].uncovered && IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+                grid_toggle_flag(mouse_pos.x, mouse_pos.y);
+            }
         }
 
         if (game_state != STATE_LOSE) {
-            game_state = STATE_WIN;
             // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
-            for (int x = 0; x < GRID_W; x++) {
-                for (int y = 0; y < GRID_H; y++) {
-                    if (!matrix[x][y].uncovered && !matrix[x][y].mine)
-                        game_state = STATE_PLAYING;
+            if (grid_is_initialized()) {
+                game_state = STATE_WIN;
+                for (int x = 0; x < state.grid_w; x++) {
+                    for (int y = 0; y < state.grid_h; y++) {
+                        if (!matrix[x][y].uncovered && !matrix[x][y].mine)
+                            game_state = STATE_PLAYING;
+                    }
                 }
-            }
-            if (game_state == STATE_WIN) {
-                grid_deinit();
+                if (game_state == STATE_WIN) {
+                    grid_deinit();
+                }
             }
         }
     } else {

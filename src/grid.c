@@ -4,14 +4,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
-Cell matrix[GRID_W][GRID_H];
+Cell **matrix;
+gridval state;
 bool initialized = false;
 
-bool is_oob(int x, int y) { return x < 0 || x > GRID_W - 1 || y < 0 || y > GRID_H - 1; }
+bool is_oob(int x, int y) { return x < 0 || x > state.grid_w - 1 || y < 0 || y > state.grid_h - 1; }
 
 static void clean_grid() {
-    for (int x = 0; x < GRID_W; x++) {
-        for (int y = 0; y < GRID_H; y++) {
+    for (int x = 0; x < state.grid_w; x++) {
+        for (int y = 0; y < state.grid_h; y++) {
             matrix[x][y].mine = 0;
             matrix[x][y].uncovered = 0;
             matrix[x][y].number = 0;
@@ -20,22 +21,35 @@ static void clean_grid() {
     }
 }
 
-void grid_init(int safe_x, int safe_y) {
+void grid_init(int safe_x, int safe_y, int grid_h, int grid_w, int bombnum) {
     srand(time(NULL));
     if (initialized) {
         panic("Grid already initialized\n");
     }
 
-    if (BOMBNUM > GRID_W * GRID_H - 1) {
+    if (bombnum > grid_w * grid_h - 1) {
         panic("Too many bombs for the grid size!\n");
     }
     initialized = true;
+    matrix = malloc(grid_h * sizeof(Cell *));
+    if (matrix == NULL) {
+        panic("Buy more ram lol\n");
+    }
+    for (int i = 0; i < grid_h; i++) {
+        matrix[i] = malloc(grid_w * sizeof(Cell));
+        if (matrix[i] == NULL) {
+            panic("Buy more ram lol\n");
+        }
+    }
+    state.grid_w = grid_w;
+    state.grid_h = grid_h;
+    state.bombnum = bombnum;
     clean_grid();
 
     int bombs = 0;
     do {
-        int rand_x = rand() % GRID_W;
-        int rand_y = rand() % GRID_H;
+        int rand_x = rand() % grid_w;
+        int rand_y = rand() % grid_h;
         // Skip placing the bomb and try to find a new location if
         // - A mine is already there
         // - It's the safe spot
@@ -54,12 +68,15 @@ void grid_init(int safe_x, int safe_y) {
             }
             bombs++;
         }
-    } while (bombs < BOMBNUM);
+    } while (bombs < bombnum);
 }
 
 void grid_deinit() {
     initialized = false;
-    clean_grid();
+    if (matrix != 0) {
+        free(matrix);
+        matrix = 0;
+    }
 }
 
 bool grid_is_initialized() { return initialized; }

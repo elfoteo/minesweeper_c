@@ -6,9 +6,15 @@
 
 #define CELL_SIZE 40
 #define CELL_PADDING 10
-#define BOMBNUM 10
-#define GRID_H 10 // (SCREEN_WIDTH / (CELL_SIZE + CELL_PADDING))
-#define GRID_W 10 // (SCREEN_HEIGHT / (CELL_SIZE + CELL_PADDING))
+
+typedef struct gridval gridval;
+struct gridval {
+    int grid_w;
+    int grid_h;
+    int bombnum;
+};
+
+extern gridval state;
 
 typedef struct Cell Cell;
 
@@ -19,11 +25,11 @@ struct Cell {
     bool flag;
 };
 
-extern Cell matrix[GRID_W][GRID_H];
+extern Cell **matrix;
 
 bool is_oob(int x, int y);
 
-void grid_init(int safe_x, int safe_y);
+void grid_init(int safe_x, int safe_y, int grid_h, int grid_w, int bombnum);
 void grid_deinit();
 bool grid_is_initialized();
 
