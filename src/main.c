@@ -20,9 +20,9 @@ int main() {
             case STATE_DIFFICULTY: {
                 gs = screen_difficulty_draw();
                 if (gs != 0) {
-                    state.grid_h = gs->grid_size;
-                    state.grid_w = gs->grid_size;
-                    state.bombnum = gs->mines;
+                    grid_state.grid_h = gs->grid_size;
+                    grid_state.grid_w = gs->grid_size;
+                    grid_state.bombnum = gs->mines;
                     game_state = STATE_PLAYING;
                 }
                 break;

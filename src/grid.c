@@ -1,18 +1,18 @@
 #include "grid.h"
-#include "raylib.h"
 #include "utils.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+
 Cell **matrix;
-gridval state;
+gridval grid_state;
 bool initialized = false;
 
-bool is_oob(int x, int y) { return x < 0 || x > state.grid_w - 1 || y < 0 || y > state.grid_h - 1; }
+bool is_oob(int x, int y) { return x < 0 || x > grid_state.grid_w - 1 || y < 0 || y > grid_state.grid_h - 1; }
 
 static void clean_grid() {
-    for (int x = 0; x < state.grid_w; x++) {
-        for (int y = 0; y < state.grid_h; y++) {
+    for (int x = 0; x < grid_state.grid_w; x++) {
+        for (int y = 0; y < grid_state.grid_h; y++) {
             matrix[x][y].mine = 0;
             matrix[x][y].uncovered = 0;
             matrix[x][y].number = 0;
@@ -41,9 +41,11 @@ void grid_init(int safe_x, int safe_y, int grid_h, int grid_w, int bombnum) {
             panic("Buy more ram lol\n");
         }
     }
-    state.grid_w = grid_w;
-    state.grid_h = grid_h;
-    state.bombnum = bombnum;
+    grid_state.grid_w = grid_w;
+    grid_state.grid_h = grid_h;
+    grid_state.bombnum = bombnum;
+    grid_state.flags = bombnum;
+    grid_state.uncovered = 0;
     clean_grid();
 
     int bombs = 0;
@@ -88,6 +90,7 @@ Cell *grid_uncover(int x, int y) {
     }
     matrix[x][y].uncovered = true;
     matrix[x][y].flag = false;
+    grid_state.uncovered++;
     if (matrix[x][y].number != 0 || matrix[x][y].mine) {
         return &matrix[x][y];
     }
@@ -111,6 +114,11 @@ void grid_set_flagged(int x, int y, bool state) {
         return;
     }
     matrix[x][y].flag = state;
+    if (state) {
+        grid_state.flags--;
+    } else {
+        grid_state.flags++;
+    }
 }
 
 bool grid_is_flagged(int x, int y) {
@@ -125,5 +133,5 @@ void grid_toggle_flag(int x, int y) {
     if (matrix[x][y].uncovered) {
         return;
     }
-    matrix[x][y].flag = !matrix[x][y].flag;
+    grid_set_flagged(x, y, !matrix[x][y].flag);
 }

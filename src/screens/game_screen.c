@@ -28,8 +28,8 @@ struct Vector2i {
 };
 
 static CellPos mouse_to_grid(Vector2 mouse_pos, GridSettings *gs) {
-    const int CELL_SIZE = (SCREEN_WIDTH / gs->grid_size * 4 / 5);
     const int CELL_PADDING = (SCREEN_WIDTH / gs->grid_size * 1 / 5);
+    const int CELL_SIZE = ((SCREEN_WIDTH - CELL_PADDING / 2) / gs->grid_size * 4 / 5);
     CellPos r;
     r.x = (int)(mouse_pos.x / (CELL_SIZE + CELL_PADDING));
     r.y = (int)(mouse_pos.y / (CELL_SIZE + CELL_PADDING));
@@ -70,10 +70,10 @@ void screen_game_draw(GridSettings *gs) {
         pos.x = SCREEN_WIDTH - tile_renderer_get_current_flag()->width * scale - ELEMENT_PADDING;
         tile_renderer_draw_flag((int)pos.x, (int)pos.y, scale);
 
-        static int FLAGS_PLACED = 11;
-        static int FLAGS_TOTAL = 12;
+        int flags_placed = grid_state.flags;
+        int flags_total = gs->mines;
         static char flags_string_buf[32];
-        snprintf(flags_string_buf, 32, "%d/%d", FLAGS_PLACED, FLAGS_TOTAL);
+        snprintf(flags_string_buf, 32, "%d/%d", flags_placed, flags_total);
         pos.x -= MeasureText(flags_string_buf, font_size);
         DrawText(flags_string_buf, (int)pos.x, (int)pos.y, font_size, WHITE);
     }
@@ -84,15 +84,15 @@ void screen_game_draw(GridSettings *gs) {
     Vector2 raw_mouse = (Vector2){(float)GetMouseX(), (float)(GetMouseY() - cursor)};
     CellPos mouse_pos = mouse_to_grid(raw_mouse, gs);
 
-    bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < state.grid_w && mouse_pos.y >= 0 && mouse_pos.y < state.grid_h);
+    bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < grid_state.grid_w && mouse_pos.y >= 0 && mouse_pos.y < grid_state.grid_h);
 
     // Draw the grid
     Cell fake = {.flag = false, .mine = false, .number = 0, .uncovered = false};
-    const int CELL_SIZE = (SCREEN_WIDTH / gs->grid_size * 4 / 5);
     const int CELL_PADDING = (SCREEN_WIDTH / gs->grid_size * 1 / 5);
+    const int CELL_SIZE = ((SCREEN_WIDTH - CELL_PADDING / 2) / gs->grid_size * 4 / 5);
 
-    for (int x = 0; x < state.grid_w; x++) {
-        for (int y = 0; y < state.grid_h; y++) {
+    for (int x = 0; x < grid_state.grid_w; x++) {
+        for (int y = 0; y < grid_state.grid_h; y++) {
             // point tile.cell at actual matrix cell (don't take address of temporary)
             Tile tile;
             tile.cell = grid_is_initialized() ? &matrix[x][y] : &fake;
@@ -100,7 +100,8 @@ void screen_game_draw(GridSettings *gs) {
 
             int cell_x = x * (CELL_SIZE + CELL_PADDING);
             int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
-            tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2, cell_y + CELL_SIZE / 2, CELL_SIZE, 0.0f);
+            tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2 + CELL_PADDING / 2, cell_y + CELL_SIZE / 2 + CELL_PADDING / 2, CELL_SIZE,
+                               0.0f);
         }
     }
 
@@ -155,14 +156,9 @@ void screen_game_draw(GridSettings *gs) {
         if (game_state != STATE_LOSE) {
             // TODO: This is highly inefficent, it should be cached by the grid when a cell is uncovered
             if (grid_is_initialized()) {
-                game_state = STATE_WIN;
-                for (int x = 0; x < state.grid_w; x++) {
-                    for (int y = 0; y < state.grid_h; y++) {
-                        if (!matrix[x][y].uncovered && !matrix[x][y].mine)
-                            game_state = STATE_PLAYING;
-                    }
-                }
-                if (game_state == STATE_WIN) {
+                int cell_count = gs->grid_size * gs->grid_size - gs->mines;
+                if (grid_state.uncovered >= cell_count) {
+                    game_state = STATE_WIN;
                     grid_deinit();
                 }
             }

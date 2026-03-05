@@ -9,9 +9,11 @@ struct gridval {
     int grid_w;
     int grid_h;
     int bombnum;
+    int flags;     // Count of flagged tiles
+    int uncovered; // Count of uncovered tiles
 };
 
-extern gridval state;
+extern gridval grid_state;
 
 typedef struct Cell Cell;
 
