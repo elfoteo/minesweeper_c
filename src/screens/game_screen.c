@@ -27,7 +27,9 @@ struct Vector2i {
     int y;
 };
 
-static CellPos mouse_to_grid(Vector2 mouse_pos) {
+static CellPos mouse_to_grid(Vector2 mouse_pos, GridSettings *gs) {
+    const int CELL_SIZE = (SCREEN_WIDTH / gs->grid_size * 4 / 5);
+    const int CELL_PADDING = (SCREEN_WIDTH / gs->grid_size * 1 / 5);
     CellPos r;
     r.x = (int)(mouse_pos.x / (CELL_SIZE + CELL_PADDING));
     r.y = (int)(mouse_pos.y / (CELL_SIZE + CELL_PADDING));
@@ -80,12 +82,15 @@ void screen_game_draw(GridSettings *gs) {
 
     // Compute mouse grid position and guard bounds BEFORE using it
     Vector2 raw_mouse = (Vector2){(float)GetMouseX(), (float)(GetMouseY() - cursor)};
-    CellPos mouse_pos = mouse_to_grid(raw_mouse);
+    CellPos mouse_pos = mouse_to_grid(raw_mouse, gs);
 
     bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < state.grid_w && mouse_pos.y >= 0 && mouse_pos.y < state.grid_h);
 
     // Draw the grid
     Cell fake = {.flag = false, .mine = false, .number = 0, .uncovered = false};
+    const int CELL_SIZE = (SCREEN_WIDTH / gs->grid_size * 4 / 5);
+    const int CELL_PADDING = (SCREEN_WIDTH / gs->grid_size * 1 / 5);
+
     for (int x = 0; x < state.grid_w; x++) {
         for (int y = 0; y < state.grid_h; y++) {
             // point tile.cell at actual matrix cell (don't take address of temporary)

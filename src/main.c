@@ -5,7 +5,6 @@
 #include "utils.h"
 #include <limits.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 GameState game_state = STATE_MAIN_MENU;
 
@@ -20,7 +19,6 @@ int main() {
         switch (game_state) {
             case STATE_DIFFICULTY: {
                 gs = screen_difficulty_draw();
-                printf("balls ");
                 if (gs != 0) {
                     state.grid_h = gs->grid_size;
                     state.grid_w = gs->grid_size;

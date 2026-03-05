@@ -4,9 +4,6 @@
 #include "main.h"
 #include <stdbool.h>
 
-#define CELL_SIZE 40
-#define CELL_PADDING 10
-
 typedef struct gridval gridval;
 struct gridval {
     int grid_w;
