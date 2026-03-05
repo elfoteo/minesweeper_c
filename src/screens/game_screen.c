@@ -85,19 +85,17 @@ void screen_game_draw(GridSettings *gs) {
     bool mouse_in_bounds = (mouse_pos.x >= 0 && mouse_pos.x < state.grid_w && mouse_pos.y >= 0 && mouse_pos.y < state.grid_h);
 
     // Draw the grid
-    if (grid_is_initialized()) {
+    Cell fake = {.flag = false, .mine = false, .number = 0, .uncovered = false};
+    for (int x = 0; x < state.grid_w; x++) {
+        for (int y = 0; y < state.grid_h; y++) {
+            // point tile.cell at actual matrix cell (don't take address of temporary)
+            Tile tile;
+            tile.cell = grid_is_initialized() ? &matrix[x][y] : &fake;
+            tile.hovered = mouse_in_bounds && (mouse_pos.x == x && mouse_pos.y == y);
 
-        for (int x = 0; x < state.grid_w; x++) {
-            for (int y = 0; y < state.grid_h; y++) {
-                // point tile.cell at actual matrix cell (don't take address of temporary)
-                Tile tile;
-                tile.cell = &matrix[x][y];
-                tile.hovered = mouse_in_bounds && (mouse_pos.x == x && mouse_pos.y == y);
-
-                int cell_x = x * (CELL_SIZE + CELL_PADDING);
-                int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
-                tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2, cell_y + CELL_SIZE / 2, CELL_SIZE, 0.0f);
-            }
+            int cell_x = x * (CELL_SIZE + CELL_PADDING);
+            int cell_y = y * (CELL_SIZE + CELL_PADDING) + cursor;
+            tile_renderer_draw(&tile, cell_x + CELL_SIZE / 2, cell_y + CELL_SIZE / 2, CELL_SIZE, 0.0f);
         }
     }
 
