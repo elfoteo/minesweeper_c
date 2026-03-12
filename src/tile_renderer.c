@@ -101,10 +101,14 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
             squarecolour = tile->hovered ? DARKBLUE : BLUE;
     }
 
+    float shadow_offset = size / 10.0f;
+    if (shadow_offset < 1.0f) shadow_offset = 1.0f;
+
     // Gray dropshadow
-    DrawRectanglePro((Rectangle){x + 4, y + 4, size, size}, (Vector2){size / 2, size / 2}, rot, GRAY);
+    DrawRectanglePro((Rectangle){(float)x + shadow_offset, (float)y + shadow_offset, size, size}, (Vector2){size / 2, size / 2}, rot,
+                     GRAY);
     // Draw the tile
-    DrawRectanglePro((Rectangle){x, y, size, size}, (Vector2){size / 2, size / 2}, rot, squarecolour);
+    DrawRectanglePro((Rectangle){(float)x, (float)y, size, size}, (Vector2){size / 2, size / 2}, rot, squarecolour);
     if (tile->cell->uncovered && !tile->cell->mine) {
         // Assume its a mine, if its a number correct it later
         const char *number = "*";
@@ -117,7 +121,7 @@ void tile_renderer_draw(Tile *tile, int x, int y, float size, float rot) {
         Vector2 textSize = MeasureTextEx(font, number, font_size, FONT_SPACING);
 
         DrawTextPro(GetFontDefault(), number, (Vector2){x, y}, (Vector2){textSize.x / 2, textSize.y / 2}, rot, size, 1, WHITE);
-    } else if (tile->cell->flag) {
+    } else if (tile->cell->flag && !tile->cell->uncovered) {
         Texture2D tex = flag_textures[flag_current_frame];
 
         Rectangle src = {0, 0, tex.width, tex.height};

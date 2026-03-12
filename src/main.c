@@ -9,7 +9,8 @@
 GameState game_state = STATE_MAIN_MENU;
 
 int main() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Minesweeper");
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_MSAA_4X_HINT);
+    InitWindow(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, "Minesweeper");
     SetTargetFPS(60);
     tile_renderer_init();
     GridSettings *gs = 0;
@@ -50,10 +51,6 @@ int main() {
             }
             case STATE_ABOUT: {
                 screen_about_draw();
-                break;
-            }
-            case STATE_SETTINGS: {
-                screen_settings_draw();
                 break;
             }
             case STATE_EXIT_NOW: {

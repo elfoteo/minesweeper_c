@@ -7,8 +7,8 @@
 #define NUM_MODES 4
 #define CUSTOM_INDEX 3
 
-// Presets
-const GridSettings EASY = {.name = "Easy", .grid_size = 7, .mines = 5};
+// Presets updated for 3x3 safe zone (which requires 5x5 mine-free area)
+const GridSettings EASY = {.name = "Easy", .grid_size = 8, .mines = 10};
 const GridSettings NORMAL = {.name = "Normal", .grid_size = 10, .mines = 12};
 const GridSettings HARD = {.name = "Hard", .grid_size = 14, .mines = 26};
 const GridSettings CUSTOM = {.name = "Custom", .grid_size = 10, .mines = 12};
@@ -31,7 +31,7 @@ const float FONT_SIZE_ARROWS = 80.0f;
 // Animation stuff
 static bool animating = false;
 static float anim_offset = 0.0f;        // current offset in pixels
-static float anim_target_offset = 0.0f; // target offset in pixels (+SCREEN_WIDTH or -SCREEN_WIDTH)
+static float anim_target_offset = 0.0f; // target offset in pixels (+GetScreenWidth() or -GetScreenWidth())
 static int anim_dir = 0;                // +1 = moving right (prev), -1 = moving left (next)
 static int anim_target_mode = 0;
 
@@ -58,7 +58,7 @@ static void start_animation(int dir) {
     }
 
     anim_dir = dir;
-    anim_target_offset = (float)anim_dir * (float)SCREEN_WIDTH;
+    anim_target_offset = (float)anim_dir * (float)GetScreenWidth();
     anim_offset = 0.0f;
     anim_target_mode = wrap_index(current_mode - anim_dir);
     animating = true;
@@ -75,8 +75,8 @@ static int clamp_i(int v, int lo, int hi) {
 }
 
 static void screen_difficulty_draw_custom_edit(GridSettings *c) {
-    float cx = (float)SCREEN_WIDTH / 2.0f;
-    float cy = (float)SCREEN_HEIGHT / 2.0f;
+    float cx = (float)GetScreenWidth() / 2.0f;
+    float cy = (float)GetScreenHeight() / 2.0f;
 
     int arrow_size = FONT_SIZE_ARROWS;
     int arrow_w = MeasureText("<", arrow_size);
@@ -92,14 +92,14 @@ static void screen_difficulty_draw_custom_edit(GridSettings *c) {
     float mines_y = cy - 40.0f;
 
     // Arrows placed at sides, vertically aligned to center of label
-    Rectangle grid_left = {(float)SCREEN_WIDTH / 5.0f - arrow_w / 2.0f - 8.0f, grid_y + (label_size - arrow_size) / 2.0f,
+    Rectangle grid_left = {(float)GetScreenWidth() / 5.0f - arrow_w / 2.0f - 8.0f, grid_y + (label_size - arrow_size) / 2.0f,
                            (float)arrow_w + 16.0f, (float)arrow_size + 12.0f};
-    Rectangle grid_right = {(float)SCREEN_WIDTH / 5.0f * 4.0f - arrow_w / 2.0f - 8.0f, grid_y + (label_size - arrow_size) / 2.0f,
+    Rectangle grid_right = {(float)GetScreenWidth() / 5.0f * 4.0f - arrow_w / 2.0f - 8.0f, grid_y + (label_size - arrow_size) / 2.0f,
                             (float)arrow_w + 16.0f, (float)arrow_size + 12.0f};
 
-    Rectangle mines_up = {(float)SCREEN_WIDTH / 5.0f - arrow_w / 2.0f - 8.0f, mines_y + (label_size - arrow_size) / 2.0f,
+    Rectangle mines_up = {(float)GetScreenWidth() / 5.0f - arrow_w / 2.0f - 8.0f, mines_y + (label_size - arrow_size) / 2.0f,
                           (float)arrow_w + 16.0f, (float)arrow_size + 12.0f};
-    Rectangle mines_down = {(float)SCREEN_WIDTH / 5.0f * 4.0f - arrow_w / 2.0f - 8.0f, mines_y + (label_size - arrow_size) / 2.0f,
+    Rectangle mines_down = {(float)GetScreenWidth() / 5.0f * 4.0f - arrow_w / 2.0f - 8.0f, mines_y + (label_size - arrow_size) / 2.0f,
                             (float)arrow_w + 16.0f, (float)arrow_size + 12.0f};
 
     Vector2 mouse = GetMousePosition();
@@ -125,8 +125,10 @@ static void screen_difficulty_draw_custom_edit(GridSettings *c) {
             c->mines++;
     }
 
-    c->grid_size = clamp_i(c->grid_size, 3, 20);
-    int max_mines = c->grid_size * c->grid_size - 1;
+    c->grid_size = clamp_i(c->grid_size, 6, 25);
+    // Accommodate 5x5 safe zone (25 cells) + at least one mine.
+    int max_mines = c->grid_size * c->grid_size - 26; 
+    if (max_mines < 1) max_mines = 1;
     c->mines = clamp_i(c->mines, 1, max_mines);
 
     if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER))
@@ -185,13 +187,13 @@ GridSettings *screen_difficulty_draw() {
     // Define arrow rectangles (large clickable area)
     int arrow_text_w = MeasureText("<", (int)FONT_SIZE_ARROWS);
     int arrow_text_h = (int)FONT_SIZE_ARROWS;
-    float arrow_y = (float)SCREEN_HEIGHT / 2.0f - FONT_SIZE_ARROWS / 2.0f;
-    left_rect.x = (float)SCREEN_WIDTH / 5.0f - arrow_text_w * 0.5f - 8.0f;
+    float arrow_y = (float)GetScreenHeight() / 2.0f - FONT_SIZE_ARROWS / 2.0f;
+    left_rect.x = (float)GetScreenWidth() / 5.0f - arrow_text_w * 0.5f - 8.0f;
     left_rect.y = arrow_y - 8.0f;
     left_rect.width = arrow_text_w + 16.0f;
     left_rect.height = (float)arrow_text_h + 16.0f;
 
-    right_rect.x = (float)SCREEN_WIDTH / 5.0f * 4.0f - arrow_text_w * 0.5f - 8.0f;
+    right_rect.x = (float)GetScreenWidth() / 5.0f * 4.0f - arrow_text_w * 0.5f - 8.0f;
     right_rect.y = arrow_y - 8.0f;
     right_rect.width = arrow_text_w + 16.0f;
     right_rect.height = (float)arrow_text_h + 16.0f;
@@ -238,10 +240,10 @@ GridSettings *screen_difficulty_draw() {
     ClearBackground(BLACK);
     const char *title_str = "New Game";
     int title_w = MeasureText(title_str, (int)FONT_SIZE);
-    DrawText(title_str, SCREEN_WIDTH / 2 - title_w / 2, 80 - (int)(FONT_SIZE / 2.0f), (int)FONT_SIZE, WHITE);
+    DrawText(title_str, GetScreenWidth() / 2 - title_w / 2, 80 - (int)(FONT_SIZE / 2.0f), (int)FONT_SIZE, WHITE);
 
-    float center_x = (float)SCREEN_WIDTH / 2.0f;
-    float center_y = (float)SCREEN_HEIGHT / 2.0f;
+    float center_x = (float)GetScreenWidth() / 2.0f;
+    float center_y = (float)GetScreenHeight() / 2.0f;
 
     if (animating) {
         const GridSettings *origin = &modes[current_mode];
@@ -250,7 +252,7 @@ GridSettings *screen_difficulty_draw() {
         float origin_x = center_x + anim_offset;
         float origin_y = center_y;
 
-        float target_x = center_x + anim_offset - (float)anim_dir * (float)SCREEN_WIDTH;
+        float target_x = center_x + anim_offset - (float)anim_dir * (float)GetScreenWidth();
         float target_y = center_y;
 
         float origin_fade = 0.9f;
@@ -306,8 +308,8 @@ GridSettings *screen_difficulty_draw() {
     int left_w = MeasureText("<", FONT_SIZE_ARROWS);
     int right_w = MeasureText(">", FONT_SIZE_ARROWS);
 
-    float left_x = (float)SCREEN_WIDTH / 5.0f - left_w / 2.0f;
-    float right_x = (float)SCREEN_WIDTH / 5.0f * 4.0f - right_w / 2.0f;
+    float left_x = (float)GetScreenWidth() / 5.0f - left_w / 2.0f;
+    float right_x = (float)GetScreenWidth() / 5.0f * 4.0f - right_w / 2.0f;
     float arrow_draw_y = arrow_y;
 
     DrawText("<", (int)left_x, (int)arrow_draw_y, FONT_SIZE_ARROWS, WHITE);
@@ -323,7 +325,7 @@ GridSettings *screen_difficulty_draw() {
             // Determine where the CUSTOM_INDEX item is currently
             if (anim_target_mode == CUSTOM_INDEX) {
                 // incoming item
-                hint_x = center_x + anim_offset - (float)anim_dir * (float)SCREEN_WIDTH;
+                hint_x = center_x + anim_offset - (float)anim_dir * (float)GetScreenWidth();
             } else {
                 // outgoing origin
                 hint_x = center_x + anim_offset;
@@ -332,10 +334,10 @@ GridSettings *screen_difficulty_draw() {
             hint_x = center_x;
         }
 
-        DrawText(hint, (int)(hint_x - hw / 2.0f), SCREEN_HEIGHT - 190, (int)FONT_SIZE_DETAILS, Fade(WHITE, 0.75f));
+        DrawText(hint, (int)(hint_x - hw / 2.0f), GetScreenHeight() - 190, (int)FONT_SIZE_DETAILS, Fade(WHITE, 0.75f));
     }
 
-    if (button_draw_centered("Play", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 80, 200, 60, BUTTON_DEFAULT_STYLE)) {
+    if (button_draw_centered("Play", GetScreenWidth() / 2, GetScreenHeight() - 80, 200, 60, BUTTON_DEFAULT_STYLE)) {
         return &modes[current_mode];
     }
 

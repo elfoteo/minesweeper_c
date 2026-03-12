@@ -33,6 +33,7 @@ void grid_deinit();
 bool grid_is_initialized();
 
 Cell *grid_uncover(int x, int y);
+void grid_uncover_all_mines();
 void grid_flag(int x, int y, bool state);
 void grid_toggle_flag(int x, int y);
 bool grid_is_flagged(int x, int y);
